@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Força Total: o sistema de gestão para academias. Alunos, planos, mensalidades, professores, treinos e avaliações físicas em um só lugar.">
+  <title>Força Total · Gestão de academias</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 4h24l-4 24H2z' fill='%23d30000'/><path d='M10 12v8M13 10v12M19 10v12M22 12v8M13 16h6' stroke='white' stroke-width='2.4' stroke-linecap='square' fill='none'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600;1,700;1,800;1,900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/apresentacao.css">
+</head>
+<body class="pagina-apresentacao">
+  <div class="progresso" id="progresso" aria-hidden="true"></div>
+
+  <!-- ============================== TOPO ============================== -->
+  <header class="ap-topo">
+    <a class="marca" href="#inicio" aria-label="Força Total — início da página">
+      <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="logo-fundo" d="M6 4h24l-4 24H2z"/><path class="logo-haltere" d="M10 12v8M13 10v12M19 10v12M22 12v8M13 16h6"/></svg></span>
+      <span class="marca-texto"><b>Força</b><i>Total</i></span>
+    </a>
+    <nav class="ap-nav" aria-label="Seções da página">
+      <a href="#modulos">Módulos</a>
+      <a href="#beneficios">Benefícios</a>
+      <a href="#simulador">Simulador</a>
+      <a href="#planos">Planos</a>
+      <a href="#perguntas">Dúvidas</a>
+    </nav>
+    <div class="ap-topo-acoes">
+      <a class="btn" href="/">Entrar</a>
+      <a class="btn primario" href="#planos">Ver planos</a>
+    </div>
+  </header>
+
+  <main id="inicio">
+    <!-- ============================== HERO ============================== -->
+    <section class="ap-hero">
+      <svg class="tri tri-1" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <svg class="tri tri-2" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <svg class="tri tri-3" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <div class="ap-hero-grade">
+        <div class="ap-hero-texto">
+          <p class="kicker" data-aos="fade-down"><b>—</b> &nbsp;O sistema de gestão para academias</p>
+          <h1 class="ap-titulo">
+            <span class="t1" data-aos="fade-right" data-aos-delay="100">Sua academia,</span>
+            <span class="t2" data-aos="fade-right" data-aos-delay="250">no controle</span>
+          </h1>
+          <p class="ap-sub" data-aos="fade-up" data-aos-delay="400">Matrículas, mensalidades, treinos e a evolução de cada aluno em um só lugar. Menos tempo com planilhas, <b>mais tempo cuidando dos alunos</b>.</p>
+          <div class="ap-ctas" data-aos="fade-up" data-aos-delay="550">
+            <a class="btn primario grande" href="#planos">Escolher um plano</a>
+            <a class="btn grande" href="#modulos">Conhecer os módulos</a>
+          </div>
+        </div>
+
+        <div class="ap-hero-visual" data-aos="zoom-in" data-aos-delay="300">
+          <div class="card-swap" data-largura="560" data-altura="384" data-distancia="34" data-distancia-vertical="38" data-profundidade="80" data-visiveis="6" data-inclinacao="5" data-atraso="3800" aria-label="Telas do sistema. Use as setas do teclado para trocar.">
+            <div class="card-swap-card" data-titulo="Painel">
+              <div class="card-swap-item">
+                <div class="card-swap-head"><span class="card-swap-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/></svg></span><span class="card-swap-title">Painel</span><span class="card-swap-pontos" aria-hidden="true"><i></i><i></i><i></i></span></div>
+                <div class="card-swap-media"><img src="img/telas/painel.webp" alt="Painel de controle com os números do dia" width="1440" height="900" draggable="false" fetchpriority="high"></div>
+              </div>
+            </div>
+            <div class="card-swap-card" data-titulo="Mensalidades">
+              <div class="card-swap-item">
+                <div class="card-swap-head"><span class="card-swap-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg></span><span class="card-swap-title">Mensalidades</span><span class="card-swap-pontos" aria-hidden="true"><i></i><i></i><i></i></span></div>
+                <div class="card-swap-media"><img src="img/telas/mensalidades.webp" alt="Lista de mensalidades com status pago, pendente e atrasado" width="1440" height="900" draggable="false" fetchpriority="high"></div>
+              </div>
+            </div>
+            <div class="card-swap-card" data-titulo="Alunos">
+              <div class="card-swap-item">
+                <div class="card-swap-head"><span class="card-swap-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M16 4.6a3.2 3.2 0 0 1 0 6.3M18 14.3c1.8.8 3 2.7 3 5.7"/></svg></span><span class="card-swap-title">Alunos</span><span class="card-swap-pontos" aria-hidden="true"><i></i><i></i><i></i></span></div>
+                <div class="card-swap-media"><img src="img/telas/alunos.webp" alt="Lista de alunos com plano e situação financeira" width="1440" height="900" draggable="false" decoding="async"></div>
+              </div>
+            </div>
+            <div class="card-swap-card" data-titulo="Fichas de treino">
+              <div class="card-swap-item">
+                <div class="card-swap-head"><span class="card-swap-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span><span class="card-swap-title">Fichas de treino</span><span class="card-swap-pontos" aria-hidden="true"><i></i><i></i><i></i></span></div>
+                <div class="card-swap-media"><img src="img/telas/treinos.webp" alt="Fichas de treino com exercícios, séries, repetições e carga" width="1440" height="900" draggable="false" decoding="async"></div>
+              </div>
+            </div>
+            <div class="card-swap-card" data-titulo="Evolução">
+              <div class="card-swap-item">
+                <div class="card-swap-head"><span class="card-swap-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M5 15l4-5 4 3 6-7"/></svg></span><span class="card-swap-title">Evolução</span><span class="card-swap-pontos" aria-hidden="true"><i></i><i></i><i></i></span></div>
+                <div class="card-swap-media"><img src="img/telas/evolucao.webp" alt="Gráficos de evolução de peso, IMC, gordura e cintura de uma aluna" width="1440" height="900" draggable="false" loading="lazy"></div>
+              </div>
+            </div>
+            <div class="card-swap-card" data-titulo="Planos">
+              <div class="card-swap-item">
+                <div class="card-swap-head"><span class="card-swap-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12l-8 8-8-8V4h8z"/><circle cx="8" cy="8" r="1.4"/></svg></span><span class="card-swap-title">Planos</span><span class="card-swap-pontos" aria-hidden="true"><i></i><i></i><i></i></span></div>
+                <div class="card-swap-media"><img src="img/telas/planos.webp" alt="Planos da academia com valor mensal e duração" width="1440" height="900" draggable="false" loading="lazy"></div>
+              </div>
+            </div>
+          </div>
+          <p class="swap-dica" aria-hidden="true">Telas reais do sistema · arraste ou clique nos cartões</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="ticker" aria-hidden="true"><div class="ticker-trilho"><span>Gestão sem planilha</span><span>Disciplina</span><span>Constância</span><span>Resultado</span><span>Várias academias</span><span>Treino é compromisso</span></div></div>
+
+    <!-- ============================== NÚMEROS ============================== -->
+    <section class="ap-secao ap-numeros" aria-label="O produto em números">
+      <div class="numero-cartao" data-aos="fade-up">
+        <b data-contador="6">6</b><span>módulos integrados: alunos, planos, mensalidades, professores, treinos e avaliações</span>
+      </div>
+      <div class="numero-cartao" data-aos="fade-up" data-aos-delay="100">
+        <b data-contador="1" data-sufixo=" min">1 min</b><span>para cadastrar a academia e começar a usar</span>
+      </div>
+      <div class="numero-cartao" data-aos="fade-up" data-aos-delay="200">
+        <b data-contador="0">0</b><span>planilhas para controlar quem pagou e quem está atrasado</span>
+      </div>
+      <div class="numero-cartao" data-aos="fade-up" data-aos-delay="300">
+        <b data-contador="100" data-sufixo="%">100%</b><span>online: no computador da recepção, no tablet ou no celular</span>
+      </div>
+    </section>
+
+    <!-- ============================== SCROLL EXPAND: o painel abre até a tela inteira ============================== -->
+    <section class="scroll-expand ap-expand" data-scroll-expand data-cabecalho=".ap-topo" data-escurecer="1" aria-labelledby="expandTitulo">
+      <div class="scroll-expand__track">
+        <div class="scroll-expand__stage">
+          <div class="scroll-expand__frame">
+            <picture>
+              <source media="(max-width: 720px)" srcset="img/telas/painel-celular.webp" width="780" height="1688">
+              <img class="scroll-expand__media" src="img/telas/painel-grande.webp" width="2880" height="1800" alt="Painel de controle do Força Total com alunos ativos, valor recebido no mês e mensalidades atrasadas" loading="lazy" decoding="async" draggable="false">
+            </picture>
+            <div class="scroll-expand__scrim"></div>
+            <div class="scroll-expand__overlay">
+              <p class="kicker"><b>—</b> &nbsp;Painel de controle</p>
+              <h2 class="ap-h2" id="expandTitulo">O dia da academia <span>de relance</span></h2>
+              <p class="expand-texto">Quem está ativo, quanto entrou no mês e quem precisa ser cobrado hoje. Tudo assim que você entra no sistema.</p>
+              <a class="btn primario grande" href="#modulos">Conhecer os módulos</a>
+            </div>
+          </div>
+          <p class="scroll-expand__title" aria-hidden="true"><span class="t1">Sua academia</span><span class="t2">em uma tela</span></p>
+          <p class="scroll-expand__hint" aria-hidden="true">Role para abrir o painel</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== MÓDULOS (abas interativas) ============================== -->
+    <section class="ap-secao" id="modulos">
+      <header class="ap-cabecalho" data-aos="fade-up">
+        <p class="kicker"><b>01</b> &nbsp;/&nbsp; Módulos</p>
+        <h2 class="ap-h2">Tudo o que <span>sua academia precisa</span></h2>
+        <p>Clique em cada módulo para ver como ele funciona.</p>
+      </header>
+
+      <div class="explorador" data-aos="fade-up" data-aos-delay="100">
+        <div class="abas-modulos" role="tablist" aria-label="Módulos do sistema">
+          <button type="button" role="tab" id="aba-painel" aria-controls="painel-painel" aria-selected="true"><span class="aba-n">01</span>Painel</button>
+          <button type="button" role="tab" id="aba-alunos" aria-controls="painel-alunos" aria-selected="false" tabindex="-1"><span class="aba-n">02</span>Alunos</button>
+          <button type="button" role="tab" id="aba-planos" aria-controls="painel-planos" aria-selected="false" tabindex="-1"><span class="aba-n">03</span>Planos</button>
+          <button type="button" role="tab" id="aba-mensalidades" aria-controls="painel-mensalidades" aria-selected="false" tabindex="-1"><span class="aba-n">04</span>Mensalidades</button>
+          <button type="button" role="tab" id="aba-professores" aria-controls="painel-professores" aria-selected="false" tabindex="-1"><span class="aba-n">05</span>Professores</button>
+          <button type="button" role="tab" id="aba-treinos" aria-controls="painel-treinos" aria-selected="false" tabindex="-1"><span class="aba-n">06</span>Treinos</button>
+          <button type="button" role="tab" id="aba-avaliacoes" aria-controls="painel-avaliacoes" aria-selected="false" tabindex="-1"><span class="aba-n">07</span>Avaliações</button>
+          <span class="abas-progresso" aria-hidden="true"><i></i></span>
+        </div>
+
+        <div class="paineis-modulos">
+          <article class="painel-modulo" role="tabpanel" id="painel-painel" aria-labelledby="aba-painel">
+            <div class="pm-texto">
+              <h3>O dia da academia <span>em uma tela</span></h3>
+              <p>Assim que entra, você vê quantos alunos estão ativos, quanto entrou no mês e quem está com a mensalidade atrasada.</p>
+              <ul class="checks"><li>Recebido no mês e total em aberto</li><li>Mensalidades atrasadas com botão de receber</li><li>Próximos vencimentos da semana</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mock-kpis dois">
+                <div class="mock-kpi"><b>128</b><small>Alunos ativos</small></div>
+                <div class="mock-kpi"><b>R$ 18.450</b><small>Recebido no mês</small></div>
+                <div class="mock-kpi escuro"><b>6</b><small>Atrasadas</small></div>
+                <div class="mock-kpi escuro"><b>R$ 2.130</b><small>Em aberto</small></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="painel-modulo" role="tabpanel" id="painel-alunos" aria-labelledby="aba-alunos" hidden>
+            <div class="pm-texto">
+              <h3>Matrícula <span>em um minuto</span></h3>
+              <p>Cadastre o aluno, escolha o plano e pronto: a primeira mensalidade já sai lançada. A ficha reúne pagamentos, treinos e avaliações.</p>
+              <ul class="checks"><li>Busca instantânea por nome, CPF ou telefone</li><li>Situação financeira de cada aluno à vista</li><li>Validação de CPF, e-mail e telefone</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mock-cartao">
+                <div class="mock-busca">Buscar: <b>sou</b></div>
+                <div class="mock-linhas">
+                  <div><span><mark>Sou</mark>za, Ana</span><span>Anual</span><i class="ok">Em dia</i></div>
+                  <div><span>Pedro <mark>Sou</mark>sa</span><span>Mensal</span><i class="alerta">Vence em breve</i></div>
+                  <div><span>Lia <mark>Sou</mark>to</span><span>Trimestral</span><i class="ok">Em dia</i></div>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="painel-modulo" role="tabpanel" id="painel-planos" aria-labelledby="aba-planos" hidden>
+            <div class="pm-texto">
+              <h3>Seus planos, <span>seus preços</span></h3>
+              <p>Crie os planos da academia com valor mensal e duração do contrato. O total do contrato é calculado na hora.</p>
+              <ul class="checks"><li>Mensal, trimestral, semestral, anual...</li><li>Desative um plano sem afetar quem já está nele</li><li>Veja quantos alunos estão em cada plano</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mini-planos">
+                <div><b>Mensal</b><span>R$ 119<small>,90</small></span><small>1 mês</small></div>
+                <div class="forte"><b>Trimestral</b><span>R$ 99<small>,90</small></span><small>3 meses</small></div>
+                <div><b>Anual</b><span>R$ 79<small>,90</small></span><small>12 meses</small></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="painel-modulo" role="tabpanel" id="painel-mensalidades" aria-labelledby="aba-mensalidades" hidden>
+            <div class="pm-texto">
+              <h3>Cobrança <span>sem esquecimento</span></h3>
+              <p>As mensalidades são geradas mês a mês pelo valor do plano. O sistema separa sozinho o que está pago, pendente e atrasado.</p>
+              <ul class="checks"><li>Receba em um clique: PIX, cartão, dinheiro...</li><li>Estorne um lançamento feito por engano</li><li>Filtre por aluno ou por situação</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mock-tabela">
+                <div class="mock-cab"><span>Aluno</span><span>Ref.</span><span>Valor</span><span>Status</span></div>
+                <div><span>Ana Souza</span><span>11/2026</span><span>R$ 79,90</span><i class="ok">Paga</i></div>
+                <div><span>Bruno Lima</span><span>10/2026</span><span>R$ 119,90</span><i class="ruim">Atrasada</i></div>
+                <div><span>Camila Torres</span><span>12/2026</span><span>R$ 99,90</span><i class="alerta">Pendente</i></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="painel-modulo" role="tabpanel" id="painel-professores" aria-labelledby="aba-professores" hidden>
+            <div class="pm-texto">
+              <h3>Sua equipe <span>organizada</span></h3>
+              <p>Cadastre os professores com especialidade e CREF. Cada ficha de treino e cada avaliação física fica com o professor responsável.</p>
+              <ul class="checks"><li>Especialidade e registro profissional</li><li>Quantas fichas cada professor montou</li><li>Logins separados para recepção e administração</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mock-cartao">
+                <div class="mock-prof"><span class="avatar-mock">CM</span><div><b>Carlos Mendes</b><small>Musculação · CREF 012345-G/SP</small></div><em>12 fichas</em></div>
+                <div class="mock-prof"><span class="avatar-mock">JR</span><div><b>Juliana Rocha</b><small>Funcional e Pilates · CREF 067890-G/SP</small></div><em>9 fichas</em></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="painel-modulo" role="tabpanel" id="painel-treinos" aria-labelledby="aba-treinos" hidden>
+            <div class="pm-texto">
+              <h3>Fichas de treino <span>prontas na hora</span></h3>
+              <p>Monte a ficha com exercícios, séries, repetições e carga. O sistema sugere exercícios enquanto você digita.</p>
+              <ul class="checks"><li>Duplique a ficha para criar o "Treino B"</li><li>Período de validade com selo de vigente</li><li>Objetivo e observações do professor</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mock-cartao ficha-mock">
+                <b class="ficha-mock-titulo">Treino A · Peito e tríceps</b>
+                <div><span>01</span>Supino reto<em>4 × 10 · 40 kg</em></div>
+                <div><span>02</span>Supino inclinado<em>3 × 12 · 14 kg</em></div>
+                <div><span>03</span>Tríceps na polia<em>4 × 12 · 25 kg</em></div>
+              </div>
+            </div>
+          </article>
+
+          <article class="painel-modulo" role="tabpanel" id="painel-avaliacoes" aria-labelledby="aba-avaliacoes" hidden>
+            <div class="pm-texto">
+              <h3>Evolução <span>que o aluno enxerga</span></h3>
+              <p>Registre peso, medidas e percentual de gordura. O IMC sai na hora e cada avaliação é comparada com a anterior em gráficos.</p>
+              <ul class="checks"><li>Variação desde a avaliação anterior</li><li>Gráficos de peso, IMC, gordura e cintura</li><li>Histórico completo de cada aluno</li></ul>
+            </div>
+            <div class="pm-visual" aria-hidden="true">
+              <div class="mock-grafico">
+                <div class="mock-grafico-topo"><b>Peso (kg)</b><span class="desce">−3,3 kg</span></div>
+                <svg viewBox="0 0 300 140" class="grafico-desenho">
+                  <defs><linearGradient id="gArea2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d30000" stop-opacity=".45"/><stop offset="1" stop-color="#d30000" stop-opacity="0"/></linearGradient></defs>
+                  <line x1="0" y1="118" x2="300" y2="118" class="g-grade"/>
+                  <path class="g-area" d="M20 30 L100 52 L180 70 L280 92 L280 118 L20 118 Z" fill="url(#gArea2)"/>
+                  <path class="g-linha" d="M20 30 L100 52 L180 70 L280 92"/>
+                  <circle cx="20" cy="30" r="5" class="g-pt"/><circle cx="100" cy="52" r="5" class="g-pt"/><circle cx="180" cy="70" r="5" class="g-pt"/><circle cx="280" cy="92" r="5" class="g-pt"/>
+                  <text x="20" y="18" text-anchor="middle">68,5</text><text x="100" y="40" text-anchor="middle">67,4</text><text x="180" y="58" text-anchor="middle">66,1</text><text x="280" y="80" text-anchor="middle">65,2</text>
+                </svg>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== BENEFÍCIOS ============================== -->
+    <section class="ap-secao" id="beneficios">
+      <header class="ap-cabecalho" data-aos="fade-up">
+        <p class="kicker"><b>02</b> &nbsp;/&nbsp; Benefícios</p>
+        <h2 class="ap-h2">Menos papel, <span>mais resultado</span></h2>
+      </header>
+
+      <div class="beneficio">
+        <div class="beneficio-texto" data-aos="fade-right">
+          <span class="beneficio-n">01</span>
+          <h3>Receita sob controle</h3>
+          <p>Saiba no começo do dia quem precisa ser cobrado. Mensalidades atrasadas aparecem sozinhas no painel, com o valor total em aberto.</p>
+          <ul class="checks"><li>Nada de caderno ou planilha de pagamentos</li><li>Cobrança no dia certo, sem esquecer ninguém</li><li>Total recebido no mês sempre atualizado</li></ul>
+        </div>
+        <div class="beneficio-visual" data-aos="fade-left" data-aos-delay="150" aria-hidden="true">
+          <div class="mock-tabela">
+            <div class="mock-cab"><span>Aluno</span><span>Ref.</span><span>Valor</span><span>Status</span></div>
+            <div><span>Ana Souza</span><span>11/2026</span><span>R$ 79,90</span><i class="ok">Paga</i></div>
+            <div><span>Bruno Lima</span><span>10/2026</span><span>R$ 119,90</span><i class="ruim">Atrasada</i></div>
+            <div><span>Camila Torres</span><span>12/2026</span><span>R$ 99,90</span><i class="alerta">Pendente</i></div>
+            <div><span>Diego Alves</span><span>11/2026</span><span>R$ 89,90</span><i class="ok">Paga</i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beneficio invertido">
+        <div class="beneficio-texto" data-aos="fade-left">
+          <span class="beneficio-n">02</span>
+          <h3>Alunos que voltam</h3>
+          <p>Aluno que vê a própria evolução tem mais motivo para continuar. Mostre os gráficos de cada avaliação e entregue a ficha de treino pronta.</p>
+          <ul class="checks"><li>Avaliações comparadas com a anterior</li><li>Fichas montadas em poucos minutos</li><li>Histórico do aluno sempre à mão</li></ul>
+        </div>
+        <div class="beneficio-visual" data-aos="fade-right" data-aos-delay="150" aria-hidden="true">
+          <div class="mock-grafico">
+            <div class="mock-grafico-topo"><b>Gordura (%)</b><span class="desce">−2,6% desde a primeira avaliação</span></div>
+            <svg viewBox="0 0 300 140" class="grafico-desenho">
+              <defs><linearGradient id="gArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d30000" stop-opacity=".45"/><stop offset="1" stop-color="#d30000" stop-opacity="0"/></linearGradient></defs>
+              <line x1="0" y1="118" x2="300" y2="118" class="g-grade"/>
+              <path class="g-area" d="M20 28 L100 46 L180 74 L280 88 L280 118 L20 118 Z" fill="url(#gArea)"/>
+              <path class="g-linha" d="M20 28 L100 46 L180 74 L280 88"/>
+              <circle cx="20" cy="28" r="5" class="g-pt"/><circle cx="100" cy="46" r="5" class="g-pt"/><circle cx="180" cy="74" r="5" class="g-pt"/><circle cx="280" cy="88" r="5" class="g-pt"/>
+              <text x="20" y="16" text-anchor="middle">28,0</text><text x="100" y="34" text-anchor="middle">27,1</text><text x="180" y="62" text-anchor="middle">26,0</text><text x="280" y="76" text-anchor="middle">25,4</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="beneficio">
+        <div class="beneficio-texto" data-aos="fade-right">
+          <span class="beneficio-n">03</span>
+          <h3>Na recepção ou no celular</h3>
+          <p>Funciona no navegador, sem instalar nada. No celular, tudo se adapta à tela: dá para matricular ou receber uma mensalidade de qualquer lugar da academia.</p>
+          <ul class="checks"><li>Busca rápida enquanto o aluno espera</li><li>Formulários que avisam o erro na hora</li><li>Funciona em qualquer computador, tablet ou celular</li></ul>
+        </div>
+        <div class="beneficio-visual" data-aos="zoom-in" data-aos-delay="150" aria-hidden="true">
+          <div class="mock-celular">
+            <div class="mock-cel-topo"><span class="mini-logo"></span><b>Alunos</b></div>
+            <div class="mock-cel-cartao"><b>Ana Souza</b><small>Plano Anual</small><i class="ok">Em dia</i></div>
+            <div class="mock-cel-cartao"><b>Bruno Lima</b><small>Plano Mensal</small><i class="ruim">Atrasado</i></div>
+            <div class="mock-cel-cartao"><b>Camila Torres</b><small>Plano Trimestral</small><i class="alerta">Vence em breve</i></div>
+            <div class="mock-cel-botao">+ Matricular aluno</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="beneficio invertido">
+        <div class="beneficio-texto" data-aos="fade-left">
+          <span class="beneficio-n">04</span>
+          <h3>Pronto para crescer</h3>
+          <p>Abriu outra unidade? Cada academia tem a sua conta, a sua equipe e os seus dados, sem nada se misturar. A recepção cuida do dia a dia, e a gerência cuida de planos e preços.</p>
+          <ul class="checks"><li>Uma conta para cada unidade</li><li>Perfis para administrador e recepção</li><li>Comece a usar no mesmo dia</li></ul>
+        </div>
+        <div class="beneficio-visual" data-aos="fade-right" data-aos-delay="150" aria-hidden="true">
+          <div class="mock-academias">
+            <div class="mock-acad"><b>Unidade Centro</b><small>128 alunos · 3 planos</small></div>
+            <div class="mock-muro"><span>cada uma com seus dados</span></div>
+            <div class="mock-acad"><b>Unidade Jardins</b><small>64 alunos · 2 planos</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== SIMULADOR (interativo) ============================== -->
+    <section class="ap-secao" id="simulador">
+      <header class="ap-cabecalho" data-aos="fade-up">
+        <p class="kicker"><b>03</b> &nbsp;/&nbsp; Simulador</p>
+        <h2 class="ap-h2">Quanto passa <span>pelas suas mãos?</span></h2>
+        <p>Ajuste os números da sua academia e veja o faturamento do mês e quanto fica em aberto quando a cobrança atrasa.</p>
+      </header>
+
+      <div class="simulador" data-aos="fade-up" data-aos-delay="100">
+        <form class="sim-controles" id="formSimulador" onsubmit="return false">
+          <label class="sim-campo">
+            <span>Alunos ativos <output id="saidaAlunos">120</output></span>
+            <input type="range" id="simAlunos" min="20" max="1500" step="10" value="120">
+          </label>
+          <label class="sim-campo">
+            <span>Mensalidade média <output id="saidaMensalidade">R$ 110</output></span>
+            <input type="range" id="simMensalidade" min="50" max="400" step="5" value="110">
+          </label>
+          <label class="sim-campo">
+            <span>Alunos com mensalidade atrasada <output id="saidaAtraso">12%</output></span>
+            <input type="range" id="simAtraso" min="0" max="40" step="1" value="12">
+          </label>
+        </form>
+
+        <div class="sim-resultado" aria-live="polite">
+          <div class="sim-numero">
+            <small>Faturamento previsto no mês</small>
+            <b id="resFaturamento">R$ 13.200</b>
+          </div>
+          <div class="sim-numero alerta">
+            <small>Em aberto todo mês com os atrasos</small>
+            <b id="resAberto">R$ 1.584</b>
+            <span id="resAno">R$ 19.008 por ano</span>
+          </div>
+          <p class="sim-texto">Com o Força Total, esses atrasos aparecem no painel todo dia e são cobrados em um clique.</p>
+          <div class="sim-recomendacao">
+            <span>Plano indicado para o seu tamanho:</span>
+            <b id="resPlano">Profissional</b>
+            <a class="btn primario" href="#planos" id="verPlanoIndicado">Ver plano</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================== PLANOS (PixelCard) ============================== -->
+    <section class="ap-secao" id="planos">
+      <header class="ap-cabecalho centro" data-aos="fade-up">
+        <p class="kicker"><b>04</b> &nbsp;/&nbsp; Planos</p>
+        <h2 class="ap-h2">Escolha <span>o seu plano</span></h2>
+        <p>Todos os planos têm os 6 módulos completos. O que muda é o tamanho da academia.</p>
+        <div class="cobranca" role="radiogroup" aria-label="Forma de cobrança">
+          <button type="button" role="radio" aria-checked="true" data-cobranca="mensal">Mensal</button>
+          <button type="button" role="radio" aria-checked="false" data-cobranca="anual">Anual <em>2 meses grátis</em></button>
+          <span class="cobranca-marcador" aria-hidden="true"></span>
+        </div>
+      </header>
+
+      <div class="precos">
+        <div class="plano-card" data-plano="essencial" data-aos="fade-up">
+          <div class="plano-conteudo">
+            <span class="plano-selo" hidden>Indicado para você</span>
+            <h3>Essencial</h3>
+            <p class="plano-para">Para academias que estão começando</p>
+            <div class="plano-preco"><small>R$</small><b data-mensal="99" data-anual="82,50">99</b><span>/mês</span></div>
+            <p class="plano-cobrado" data-mensal="cobrado todo mês" data-anual="R$ 990 cobrados por ano">cobrado todo mês</p>
+            <ul>
+              <li>Os 6 módulos completos</li>
+              <li>Até <b>150</b> alunos ativos</li>
+              <li><b>2</b> usuários (gerência e recepção)</li>
+              <li>Painel com os números do dia</li>
+              <li>Suporte por e-mail</li>
+            </ul>
+            <a class="btn plano-botao" href="/#cadastro">Começar com o Essencial</a>
+          </div>
+        </div>
+
+        <div class="plano-card plano-destaque" data-plano="profissional" data-aos="fade-up" data-aos-delay="120">
+          <div class="plano-conteudo">
+            <span class="plano-fita">Mais escolhido</span>
+            <span class="plano-selo" hidden>Indicado para você</span>
+            <h3>Profissional</h3>
+            <p class="plano-para">Para academias em crescimento</p>
+            <div class="plano-preco"><small>R$</small><b data-mensal="189" data-anual="157,50">189</b><span>/mês</span></div>
+            <p class="plano-cobrado" data-mensal="cobrado todo mês" data-anual="R$ 1.890 cobrados por ano">cobrado todo mês</p>
+            <ul>
+              <li>Tudo do Essencial</li>
+              <li>Até <b>600</b> alunos ativos</li>
+              <li>Usuários <b>ilimitados</b></li>
+              <li>Implantação acompanhada pela nossa equipe</li>
+              <li>Suporte por WhatsApp</li>
+            </ul>
+            <a class="btn primario plano-botao" href="/#cadastro">Começar com o Profissional</a>
+          </div>
+        </div>
+
+        <div class="plano-card" data-plano="rede" data-aos="fade-up" data-aos-delay="240">
+          <div class="plano-conteudo">
+            <span class="plano-selo" hidden>Indicado para você</span>
+            <h3>Rede</h3>
+            <p class="plano-para">Para quem tem mais de uma unidade</p>
+            <div class="plano-preco"><small>R$</small><b data-mensal="349" data-anual="290,83">349</b><span>/mês</span></div>
+            <p class="plano-cobrado" data-mensal="cobrado todo mês" data-anual="R$ 3.490 cobrados por ano">cobrado todo mês</p>
+            <ul>
+              <li>Tudo do Profissional</li>
+              <li>Alunos <b>ilimitados</b></li>
+              <li>Até <b>5</b> unidades, cada uma com seus dados</li>
+              <li>Gerente de conta dedicado</li>
+              <li>Suporte prioritário</li>
+            </ul>
+            <a class="btn plano-botao" href="/#cadastro">Começar com o Rede</a>
+          </div>
+        </div>
+      </div>
+      <p class="precos-nota" data-aos="fade-up">Valores em reais. Troque de plano quando quiser.</p>
+    </section>
+
+    <!-- ============================== PERGUNTAS ============================== -->
+    <section class="ap-secao" id="perguntas">
+      <header class="ap-cabecalho" data-aos="fade-up">
+        <p class="kicker"><b>05</b> &nbsp;/&nbsp; Dúvidas</p>
+        <h2 class="ap-h2">Perguntas <span>frequentes</span></h2>
+      </header>
+      <div class="faq">
+        <details data-aos="fade-up"><summary>Preciso instalar alguma coisa?</summary><p>Não. O Força Total funciona no navegador do computador, do tablet ou do celular. É só entrar com o seu e-mail e senha.</p></details>
+        <details data-aos="fade-up" data-aos-delay="60"><summary>Quanto tempo leva para começar?</summary><p>O cadastro da academia leva cerca de um minuto. Depois, um guia de primeiros passos mostra o caminho: criar os planos, cadastrar os professores e matricular os alunos.</p></details>
+        <details data-aos="fade-up" data-aos-delay="120"><summary>Minha equipe pode usar ao mesmo tempo?</summary><p>Sim. Cada pessoa tem o próprio login. A recepção cuida de alunos e mensalidades, e a gerência também cria planos e gerencia a equipe.</p></details>
+        <details data-aos="fade-up" data-aos-delay="180"><summary>Tenho mais de uma unidade. Os dados se misturam?</summary><p>Não. Cada unidade tem a sua conta, com alunos, planos e mensalidades separados. Uma unidade nunca vê os dados da outra.</p></details>
+        <details data-aos="fade-up" data-aos-delay="240"><summary>Posso trocar de plano depois?</summary><p>Sim. Se a academia crescer, é só passar para um plano maior. Seus dados continuam todos lá.</p></details>
+      </div>
+    </section>
+
+    <!-- ============================== CHAMADA FINAL ============================== -->
+    <section class="ap-final">
+      <svg class="tri tri-1" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <svg class="tri tri-2" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <div>
+        <h2 class="ap-titulo centro titulo-float" data-scroll-float data-scroll-float-linhas><span class="t1">Pronto para</span><span class="t2">começar?</span></h2>
+        <p class="ap-sub" data-aos="fade-up">Cadastre sua academia agora e organize alunos, pagamentos e treinos hoje mesmo.</p>
+        <div class="ap-ctas centro" data-aos="fade-up" data-aos-delay="120">
+          <a class="btn primario grande" href="/#cadastro">Cadastrar minha academia</a>
+          <a class="btn grande" href="/">Já tenho conta</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape-site">
+    <span><b>Força Total</b> · Sistema de Gestão de Academia</span>
+    <a class="link" href="#inicio">Voltar ao topo</a>
+  </footer>
+
+  <script src="js/ticker.js"></script>
+  <script src="js/card-swap.js"></script>
+  <script src="js/apresentacao.js"></script>
+  <script src="js/scroll-float.js"></script>
+  <script src="js/scroll-expand.js"></script>
+  <script src="js/aos.js"></script>
+</body>
+</html>

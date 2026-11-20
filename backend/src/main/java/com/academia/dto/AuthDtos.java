@@ -1,0 +1,103 @@
+package com.academia.dto;
+
+import com.academia.model.Academia;
+import com.academia.model.Perfil;
+import com.academia.model.Usuario;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDateTime;
+
+/** Objetos de entrada e saída do login, do cadastro de academia e da gestão de usuários. */
+public final class AuthDtos {
+
+    private AuthDtos() {
+    }
+
+    public record LoginRequest(
+            @NotBlank(message = "é obrigatório") @Email(message = "inválido") String email,
+            @NotBlank(message = "é obrigatória") String senha) {
+    }
+
+    /** Cadastro público: cria a academia e o primeiro usuário, que é administrador. */
+    public record CadastroAcademiaRequest(
+            @NotBlank(message = "é obrigatório") @Size(max = 120, message = "máximo de 120 caracteres") String nomeAcademia,
+            @Size(max = 80, message = "máximo de 80 caracteres") String cidade,
+            @NotBlank(message = "é obrigatório") @Size(max = 120, message = "máximo de 120 caracteres") String nome,
+            @NotBlank(message = "é obrigatório") @Email(message = "inválido") @Size(max = 120) String email,
+            @NotBlank(message = "é obrigatória") @Size(min = 8, max = 72, message = "deve ter de 8 a 72 caracteres") String senha) {
+    }
+
+    /** Criação/edição de usuário pelo administrador. Na edição, a senha é opcional. */
+    public record UsuarioRequest(
+            @NotBlank(message = "é obrigatório") @Size(max = 120) String nome,
+            @NotBlank(message = "é obrigatório") @Email(message = "inválido") @Size(max = 120) String email,
+            @Size(min = 8, max = 72, message = "deve ter de 8 a 72 caracteres") String senha,
+            @NotNull(message = "é obrigatório") Perfil perfil,
+            Boolean ativo) {
+    }
+
+    public record TrocarSenhaRequest(
+            @NotBlank(message = "é obrigatória") String senhaAtual,
+            @NotBlank(message = "é obrigatória") @Size(min = 8, max = 72, message = "deve ter de 8 a 72 caracteres") String novaSenha) {
+    }
+
+    public record UsuarioResponse(Long id, String nome, String email, Perfil perfil, boolean ativo, LocalDateTime criadoEm,
+                                  boolean doisFatores) {
+        public static UsuarioResponse de(Usuario u) {
+            return new UsuarioResponse(u.getId(), u.getNome(), u.getEmail(), u.getPerfil(), u.isAtivo(), u.getCriadoEm(),
+                    u.doisFatoresAtivo());
+        }
+    }
+
+    // ---------- Verificação em duas etapas ----------
+
+    /** Segunda etapa do login: o desafio recebido após a senha + o código do aplicativo (ou de recuperação). */
+    public record CodigoLoginRequest(
+            @NotBlank(message = "é obrigatório") String desafio,
+            @NotBlank(message = "é obrigatório") String codigo) {
+    }
+
+    public record CodigoRequest(@NotBlank(message = "é obrigatório") String codigo) {
+    }
+
+    public record DesativarDoisFatoresRequest(
+            @NotBlank(message = "é obrigatória") String senha,
+            @NotBlank(message = "é obrigatório") String codigo) {
+    }
+
+    public record DoisFatoresStatus(boolean ativo, LocalDateTime ativadoEm, int codigosRestantes) {
+    }
+
+    /** Dados para configurar o aplicativo: segredo (digitação manual), endereço otpauth e o QR Code em grade. */
+    public record DoisFatoresInicio(String segredo, String uri, java.util.List<String> qr) {
+    }
+
+    /** Códigos de recuperação em texto: mostrados uma única vez, ao ativar. */
+    public record CodigosRecuperacao(java.util.List<String> codigos) {
+    }
+
+    public record AcademiaResponse(Long id, String nome, String cidade) {
+        public static AcademiaResponse de(Academia a) {
+            return new AcademiaResponse(a.getId(), a.getNome(), a.getCidade());
+        }
+    }
+
+    /**
+     * Resposta do login/cadastro: o token vai no cabeçalho Authorization das próximas requisições.
+     * Se o usuário tiver verificação em duas etapas, a senha certa devolve só doisFatores=true e um
+     * desafio; o token vem depois, em /api/auth/login/2fa, quando o código do aplicativo conferir.
+     */
+    public record SessaoResponse(String token, LocalDateTime expiraEm, UsuarioResponse usuario, AcademiaResponse academia,
+                                 boolean doisFatores, String desafio) {
+        public static SessaoResponse pedirCodigo(String desafio) {
+            return new SessaoResponse(null, null, null, null, true, desafio);
+        }
+    }
+
+    /** Quem está logado (GET /api/auth/eu). */
+    public record EuResponse(UsuarioResponse usuario, AcademiaResponse academia) {
+    }
+}

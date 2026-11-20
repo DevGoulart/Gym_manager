@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Força Total</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 4h24l-4 24H2z' fill='%23d30000'/><path d='M10 12v8M13 10v12M19 10v12M22 12v8M13 16h6' stroke='white' stroke-width='2.4' stroke-linecap='square' fill='none'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600;1,700;1,800;1,900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=6">
+</head>
+<body class="verificando">
+  <!-- ===================== TELA DE LOGIN / CADASTRO DE ACADEMIA ===================== -->
+  <section class="tela-login" id="telaLogin" aria-label="Acesso ao sistema">
+    <div class="login-marca">
+      <svg class="tri tri-1" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <svg class="tri tri-2" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+      <div class="marca">
+        <span class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path class="logo-fundo" d="M6 4h24l-4 24H2z"/><path class="logo-haltere" d="M10 12v8M13 10v12M19 10v12M22 12v8M13 16h6"/></svg></span>
+        <span class="marca-texto"><b>Força</b><i>Total</i></span>
+      </div>
+      <div class="login-chamada">
+        <p class="kicker"><b>—</b> &nbsp;Plataforma para academias</p>
+        <h1 class="titulo-login"><span class="t1">Gestão de</span><span class="t2">Academias</span></h1>
+        <p class="hero-sub">Alunos, planos, mensalidades, treinos e avaliações em um só lugar. Cada academia acessa <b>somente os próprios dados</b>.</p>
+      </div>
+      <ul class="login-lista">
+        <li>Uma conta por academia, com vários usuários</li>
+        <li>Perfis de administrador e funcionário</li>
+        <li>Senhas protegidas com criptografia BCrypt</li>
+        <li><a class="link" href="/apresentacao">Conheça todas as funcionalidades</a></li>
+      </ul>
+    </div>
+
+    <div class="login-painel">
+      <div class="login-cartao">
+        <div class="abas" role="tablist">
+          <button type="button" role="tab" id="abaEntrar" aria-selected="true" aria-controls="formLogin" data-aba="entrar">Entrar</button>
+          <button type="button" role="tab" id="abaCadastro" aria-selected="false" aria-controls="formCadastro" data-aba="cadastro">Cadastrar academia</button>
+        </div>
+
+        <form id="formLogin" class="form-acesso" role="tabpanel" aria-labelledby="abaEntrar" novalidate>
+          <h2>Bem-vindo de <span>volta</span></h2>
+          <p class="sub-acesso">Entre com o e-mail e a senha da sua academia.</p>
+          <div class="campo" data-campo="email">
+            <label class="rotulo" for="loginEmail">E-mail</label>
+            <input id="loginEmail" name="email" type="email" autocomplete="username" placeholder="voce@academia.com" required>
+            <small class="erro-campo" role="alert" hidden></small>
+          </div>
+          <div class="campo" data-campo="senha">
+            <label class="rotulo" for="loginSenha">Senha</label>
+            <div class="senha-wrap">
+              <input id="loginSenha" name="senha" type="password" autocomplete="current-password" placeholder="Sua senha" required>
+              <button type="button" class="ver-senha" data-ver-senha aria-label="Mostrar senha">Mostrar</button>
+            </div>
+            <small class="erro-campo" role="alert" hidden></small>
+          </div>
+          <p class="erro-form" data-erro-geral hidden></p>
+          <button type="submit" class="primario largo">Entrar</button>
+          <p class="troca-aba">Ainda não tem conta? <button type="button" class="link" data-aba="cadastro">Cadastre sua academia</button></p>
+        </form>
+
+        <form id="formDoisFatores" class="form-acesso" novalidate hidden aria-labelledby="tituloDoisFatores">
+          <h2 id="tituloDoisFatores">Verificação em <span>duas etapas</span></h2>
+          <p class="sub-acesso" id="textoDoisFatores">Abra o aplicativo autenticador no celular e digite o código de 6 dígitos da sua conta.</p>
+          <div class="campo" data-campo="codigo">
+            <label class="rotulo" for="codigo2fa" id="rotuloCodigo2fa">Código do aplicativo</label>
+            <input id="codigo2fa" name="codigo" class="codigo-otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+            <small class="erro-campo" role="alert" hidden></small>
+          </div>
+          <p class="erro-form" data-erro-geral hidden></p>
+          <button type="submit" class="primario largo">Verificar e entrar</button>
+          <p class="troca-aba"><button type="button" class="link" data-alternar-recuperacao>Perdeu o celular? Use um código de recuperação</button></p>
+          <p class="troca-aba"><button type="button" class="link" data-voltar-login>Voltar para o login</button></p>
+        </form>
+
+        <form id="formCadastro" class="form-acesso" role="tabpanel" aria-labelledby="abaCadastro" novalidate hidden>
+          <h2>Cadastre sua <span>academia</span></h2>
+          <p class="sub-acesso">Em um minuto: você vira o administrador e já começa a usar.</p>
+          <div class="campos">
+            <div class="campo full" data-campo="nomeAcademia">
+              <label class="rotulo" for="cadAcademia">Nome da academia <span class="obrig">*</span></label>
+              <input id="cadAcademia" name="nomeAcademia" autocomplete="organization" placeholder="Ex.: Academia Corpo em Forma" maxlength="120">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+            <div class="campo full" data-campo="cidade">
+              <label class="rotulo" for="cadCidade">Cidade</label>
+              <input id="cadCidade" name="cidade" autocomplete="address-level2" placeholder="Ex.: Campinas" maxlength="80">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+            <div class="campo full" data-campo="nome">
+              <label class="rotulo" for="cadNome">Seu nome <span class="obrig">*</span></label>
+              <input id="cadNome" name="nome" autocomplete="name" placeholder="Nome e sobrenome" maxlength="120">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+            <div class="campo full" data-campo="email">
+              <label class="rotulo" for="cadEmail">E-mail (será seu login) <span class="obrig">*</span></label>
+              <input id="cadEmail" name="email" type="email" autocomplete="email" placeholder="voce@academia.com" maxlength="120">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+            <div class="campo" data-campo="senha">
+              <label class="rotulo" for="cadSenha">Senha <span class="obrig">*</span></label>
+              <input id="cadSenha" name="senha" type="password" autocomplete="new-password" placeholder="8 caracteres ou mais" maxlength="72">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+            <div class="campo" data-campo="confirmar">
+              <label class="rotulo" for="cadConfirmar">Confirmar senha <span class="obrig">*</span></label>
+              <input id="cadConfirmar" name="confirmar" type="password" autocomplete="new-password" placeholder="Repita a senha" maxlength="72">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+          </div>
+          <p class="erro-form" data-erro-geral hidden></p>
+          <button type="submit" class="primario largo">Criar academia e entrar</button>
+          <p class="troca-aba">Já tem conta? <button type="button" class="link" data-aba="entrar">Entrar</button></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <header class="barra-topo">
+    <a class="marca" href="#/dashboard" aria-label="Força Total — início">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><path class="logo-fundo" d="M6 4h24l-4 24H2z"/><path class="logo-haltere" d="M10 12v8M13 10v12M19 10v12M22 12v8M13 16h6"/></svg>
+      </span>
+      <span class="marca-texto"><b>Força</b><i>Total</i></span>
+    </a>
+
+    <nav id="menu" aria-label="Módulos">
+      <a href="#/dashboard" data-mod="dashboard">Início</a>
+      <a href="#/alunos" data-mod="alunos">Alunos</a>
+      <a href="#/planos" data-mod="planos">Planos</a>
+      <a href="#/mensalidades" data-mod="mensalidades">Mensalidades</a>
+      <a href="#/professores" data-mod="professores">Professores</a>
+      <a href="#/treinos" data-mod="treinos">Treinos</a>
+      <a href="#/avaliacoes" data-mod="avaliacoes">Avaliações</a>
+      <a href="#/usuarios" data-mod="usuarios" data-admin class="so-mobile">Usuários</a>
+    </nav>
+
+    <div class="usuario-area">
+      <button type="button" class="usuario-botao" id="botaoUsuario" aria-haspopup="menu" aria-expanded="false" aria-controls="menuUsuario">
+        <span class="avatar" id="avatarUsuario" aria-hidden="true"></span>
+        <span class="usuario-textos">
+          <b id="nomeAcademia"></b>
+          <small id="nomeUsuario"></small>
+        </span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="usuario-menu" id="menuUsuario" role="menu" hidden>
+        <div class="usuario-menu-topo">
+          <b id="menuNome"></b>
+          <small id="menuEmail"></small>
+          <span class="badge" id="menuPerfil"></span>
+        </div>
+        <a href="#/usuarios" role="menuitem" data-admin>Usuários da academia</a>
+        <button type="button" role="menuitem" data-acao="doisFatores">Verificação em duas etapas <span class="badge" id="menuDoisFatores"></span></button>
+        <button type="button" role="menuitem" data-acao="alterarSenha">Alterar minha senha</button>
+        <button type="button" role="menuitem" class="sair" data-acao="sair">Sair</button>
+      </div>
+    </div>
+
+    <button class="hamburguer" id="hamburguer" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <section class="hero" aria-labelledby="titulo">
+    <svg class="tri tri-1" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+    <svg class="tri tri-2" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+    <svg class="tri tri-3" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
+    <div class="hero-conteudo">
+      <div>
+        <p class="kicker" id="kicker"></p>
+        <h1 id="titulo"><span class="t1"></span><span class="t2"></span></h1>
+        <p id="subtitulo" class="hero-sub"></p>
+      </div>
+      <div id="acoes" class="acoes"></div>
+    </div>
+  </section>
+
+  <main>
+    <section id="conteudo" aria-live="polite"></section>
+  </main>
+
+  <footer class="rodape-site">
+    <span><b>Força Total</b> · Sistema de Gestão de Academia</span>
+    <a class="link" href="/apresentacao">Conheça a plataforma</a>
+  </footer>
+
+  <dialog id="modal">
+    <form id="modalForm" method="dialog" novalidate>
+      <header class="modal-topo">
+        <h2 id="modalTitulo"></h2>
+        <button type="button" class="fechar" data-fechar aria-label="Fechar">
+          <svg viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></svg>
+        </button>
+      </header>
+      <div id="modalCorpo" class="modal-corpo"></div>
+      <p id="modalErro" class="erro-form" hidden></p>
+      <footer id="modalRodape" class="modal-rodape"></footer>
+    </form>
+  </dialog>
+
+  <div id="toasts" class="toasts" aria-live="assertive"></div>
+
+  <script src="js/ticker.js"></script>
+  <script src="js/app.js?v=5"></script>
+</body>
+</html>

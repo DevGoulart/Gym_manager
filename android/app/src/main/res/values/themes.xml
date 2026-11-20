@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Academia" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/primaria</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#FFE8D9</item>
+        <item name="colorOnPrimaryContainer">#5C1D00</item>
+        <item name="colorSecondary">@color/cabecalho</item>
+        <item name="colorSecondaryContainer">#FFE8D9</item>
+        <item name="android:colorBackground">@color/fundo</item>
+        <item name="colorSurface">@color/superficie</item>
+        <item name="android:statusBarColor">@color/cabecalho</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <style name="Toolbar.Academia" parent="Widget.Material3.Toolbar">
+        <item name="android:background">@color/cabecalho</item>
+        <item name="titleTextColor">#FFFFFF</item>
+        <item name="subtitleTextColor">#CBD2D9</item>
+        <item name="navigationIconTint">#FFFFFF</item>
+    </style>
+</resources>

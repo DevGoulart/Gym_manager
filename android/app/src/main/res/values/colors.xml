@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primaria">#E8590C</color>
+    <color name="primaria_escura">#B8440A</color>
+    <color name="cabecalho">#1F2933</color>
+    <color name="fundo">#F3F4F6</color>
+    <color name="superficie">#FFFFFF</color>
+    <color name="texto">#1F2933</color>
+    <color name="texto_secundario">#616E7C</color>
+    <color name="verde">#2F9E44</color>
+    <color name="laranja">#F08C00</color>
+    <color name="vermelho">#E03131</color>
+    <color name="cinza">#868E96</color>
+    <color name="azul">#1C7ED6</color>
+    <color name="icone_fundo">#1F2933</color>
+</resources>
