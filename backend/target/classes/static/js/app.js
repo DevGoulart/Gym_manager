@@ -1699,9 +1699,27 @@ function entrarNoApp(dados) {
   document.body.classList.remove('nao-logado', 'verificando');
   if (!ehAdmin() && rotaAtual().modulo === 'usuarios') location.hash = '#/dashboard';
   renderizar();
+  // Primeiro acesso deste usuário neste navegador: abre o tutorial guiado (js/tutorial.js)
+  contextoTutorial().then((ctx) => { if (ctx) window.Tutorial?.aoEntrar(ctx); });
 }
 
+/** Dados que o tutorial usa para adaptar os passos (perfil, academia nova ou não). */
+async function contextoTutorial() {
+  if (!sessao) return null;
+  let comecando = false;
+  try { const d = await api('/dashboard'); comecando = d.totalAlunos === 0 && d.planosAtivos === 0; } catch { /* segue sem o passo extra */ }
+  if (!sessao) return null;
+  return { usuarioId: sessao.usuario.id, academiaId: sessao.academia.id, nome: sessao.usuario.nome, academia: sessao.academia.nome, admin: ehAdmin(), comecando };
+}
+
+ACOES.tutorial = async () => {
+  fecharMenuUsuario();
+  const ctx = await contextoTutorial();
+  if (ctx) window.Tutorial?.iniciar(ctx);
+};
+
 function encerrarSessao(mensagem) {
+  window.Tutorial?.encerrar();
   apagarToken();
   sessao = null;
   cacheGet.clear();

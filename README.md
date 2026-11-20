@@ -86,6 +86,17 @@ O sistema atende **várias academias ao mesmo tempo**. Cada academia tem os pró
 
 > Se você editar arquivos do front-end com o servidor rodando, use *Build → Rebuild Project* (ou reinicie) e recarregue a página com **Ctrl+F5**.
 
+## Tutorial para novos usuários
+
+No primeiro acesso de cada usuário, um tour guiado passa pelas telas reais do sistema. Cada parte fica destacada (o resto da tela escurece) com um balão explicando o que faz: menu de módulos, números do painel, atalhos, busca de alunos, ficha do aluno, planos, cobrança das mensalidades, fichas de treino, gráficos de evolução e menu da conta.
+
+- **Quando aparece:** sozinho, uma vez por usuário em cada navegador. "Agora não" ou "Pular tutorial" também contam como visto.
+- **Rever depois:** menu da conta (canto superior direito), opção **Tutorial do sistema**.
+- **Adapta-se:** ao perfil (para a recepção, explica que planos são do administrador), à academia recém-cadastrada (passo extra mostrando a lista "Primeiros passos") e ao celular (aponta o botão de menu e põe o balão na parte de baixo da tela).
+- **Teclado:** → ou Enter avança, ← volta, Esc fecha. O foco fica dentro do balão enquanto o tour está aberto.
+- **Arquivos:** `static/js/tutorial.js` (passos e lógica), estilos no fim de `static/css/style.css`. Os passos ficam na função `montarPassos`: para incluir um, informe a rota (`alunos`, `planos`…), o seletor do elemento a destacar, o título e o texto.
+- **Para ver de novo como novo usuário:** apague a chave `forcatotal.tutorial.<academia>.<usuário>` do armazenamento do navegador (DevTools → Application → Local Storage) e recarregue.
+
 ## Funcionalidades
 
 | Módulo | O que faz |
@@ -141,3 +152,6 @@ Erros são devolvidos como `{"erro": "mensagem"}` e aparecem para o usuário no 
 ## Tecnologias
 
 Java 21 · Spring Boot 3.5 (Web, Data JPA, Validation, Security) · H2 Database · Maven · HTML5, CSS3 e JavaScript (Fetch API), sem bibliotecas externas · IntelliJ IDEA
+
+
+& "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.11-bin\6mqf5t809d9geo83kj4ttckcbc\apache-maven-3.9.11\bin\mvn.cmd" spring-boot:run
