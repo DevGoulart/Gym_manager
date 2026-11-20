@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
-/** Uma academia cliente do sistema. Todos os dados (alunos, planos, mensalidades...) pertencem a uma academia. */
+/**
+ * Uma academia cliente do sistema. Todos os dados (alunos, planos, mensalidades...) pertencem a uma academia.
+ * No plano Rede, cada academia é uma unidade da {@link Rede}; academias avulsas ficam com rede vazia.
+ */
 @Entity
 @Table(name = "academias")
 public class Academia {
@@ -25,6 +28,11 @@ public class Academia {
     @Column(nullable = false)
     private boolean ativa = true;
 
+    /** Rede da qual esta academia é unidade (vazio = academia avulsa). */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "rede_id")
+    private Rede rede;
+
     public Academia() {
     }
 
@@ -43,4 +51,6 @@ public class Academia {
     public void setCriadaEm(LocalDateTime criadaEm) { this.criadaEm = criadaEm; }
     public boolean isAtiva() { return ativa; }
     public void setAtiva(boolean ativa) { this.ativa = ativa; }
+    public Rede getRede() { return rede; }
+    public void setRede(Rede rede) { this.rede = rede; }
 }

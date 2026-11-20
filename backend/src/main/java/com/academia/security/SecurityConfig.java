@@ -22,7 +22,8 @@ import java.nio.charset.StandardCharsets;
  *  - o site (HTML, CSS, JS) é público, ele mesmo mostra a tela de login;
  *  - login e cadastro de academia são públicos;
  *  - todo o resto de /api exige login;
- *  - usuários e alterações em planos são só para o perfil ADMIN.
+ *  - usuários e alterações em planos são só para o perfil ADMIN (o DONO da rede também tem esse papel);
+ *  - o painel da rede (/api/rede) é só do DONO; transformar a academia em rede, só do ADMIN.
  */
 @Configuration
 @EnableWebSecurity
@@ -46,6 +47,8 @@ public class SecurityConfig {
                 .headers(h -> h.frameOptions(f -> f.sameOrigin())) // console do H2 usa frames
                 .authorizeHttpRequests(regras -> regras
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/login/2fa", "/api/auth/cadastro").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/rede/converter").hasRole("ADMIN")
+                        .requestMatchers("/api/rede/**", "/api/rede").hasRole("DONO")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/planos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/planos/**").hasRole("ADMIN")

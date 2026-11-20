@@ -35,8 +35,13 @@ public class DashboardService {
         this.academiaAtual = academiaAtual;
     }
 
+    /** Números da academia aberta agora. */
     public DashboardResponse resumo() {
-        Long academiaId = academiaAtual.id();
+        return resumo(academiaAtual.id());
+    }
+
+    /** Números de uma academia específica (usado também no painel da rede, uma unidade por vez). */
+    public DashboardResponse resumo(Long academiaId) {
         List<Mensalidade> mensalidades = mensalidadeRepository.findByAcademiaIdOrderByDataVencimentoDesc(academiaId);
         LocalDate hoje = LocalDate.now();
 

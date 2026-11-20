@@ -70,6 +70,7 @@ public class DadosIniciais implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         removerCpfUnicoAntigo();
+        liberarPerfilDono();
         boolean bancoVazio = planos.count() == 0 && alunos.count() == 0 && professores.count() == 0;
         Academia padrao = academias.findFirstByOrderByIdAsc().orElseGet(this::criarAcademiaPadrao);
         if (bancoVazio) cadastrarExemplos();
@@ -126,6 +127,46 @@ public class DadosIniciais implements CommandLineRunner {
             }
         } catch (Exception e) {
             log.warn("Não foi possível revisar as regras de CPF único: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Bancos criados antes do plano Rede não aceitam o perfil DONO na coluna usuarios.perfil:
+     *  - no H2, o Hibernate cria a coluna como tipo ENUM('ADMIN','FUNCIONARIO'): o tipo ganha 'DONO' no fim
+     *    (no fim para não mudar a ordem dos valores que já existem);
+     *  - em outros casos, pode haver uma regra CHECK listando os perfis da época: essa regra sai
+     *    (o próprio Java já só grava valores válidos do enum Perfil).
+     */
+    private void liberarPerfilDono() {
+        try {
+            List<String> valores = jdbc.queryForList("""
+                    SELECT e.VALUE_NAME FROM INFORMATION_SCHEMA.ENUM_VALUES e
+                    JOIN INFORMATION_SCHEMA.COLUMNS c ON c.TABLE_NAME = e.OBJECT_NAME AND c.DTD_IDENTIFIER = e.ENUM_IDENTIFIER
+                    WHERE e.OBJECT_NAME = 'USUARIOS' AND c.COLUMN_NAME = 'PERFIL' ORDER BY e.VALUE_ORDINAL
+                    """, String.class);
+            if (!valores.isEmpty() && !valores.contains(Perfil.DONO.name())) {
+                List<String> novos = new java.util.ArrayList<>(valores);
+                novos.add(Perfil.DONO.name());
+                String tipo = novos.stream().map(v -> "'" + v + "'").collect(java.util.stream.Collectors.joining(", ", "ENUM(", ")"));
+                jdbc.execute("ALTER TABLE USUARIOS ALTER COLUMN PERFIL SET DATA TYPE " + tipo);
+                log.info("Coluna usuarios.perfil agora aceita o dono da rede: {}", tipo);
+            }
+        } catch (Exception e) {
+            log.warn("Não foi possível revisar o tipo da coluna de perfis: {}", e.getMessage());
+        }
+        String sql = """
+                SELECT tc.CONSTRAINT_NAME FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS tc
+                JOIN INFORMATION_SCHEMA.CHECK_CONSTRAINTS cc ON cc.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+                WHERE tc.TABLE_NAME = 'USUARIOS' AND tc.CONSTRAINT_TYPE = 'CHECK'
+                  AND UPPER(cc.CHECK_CLAUSE) LIKE '%PERFIL%' AND UPPER(cc.CHECK_CLAUSE) NOT LIKE '%DONO%'
+                """;
+        try {
+            for (Map<String, Object> linha : jdbc.queryForList(sql)) {
+                jdbc.execute("ALTER TABLE USUARIOS DROP CONSTRAINT " + linha.get("CONSTRAINT_NAME"));
+                log.info("Regra antiga de perfis removida da tabela USUARIOS (agora aceita o dono da rede).");
+            }
+        } catch (Exception e) {
+            log.warn("Não foi possível revisar a regra de perfis: {}", e.getMessage());
         }
     }
 

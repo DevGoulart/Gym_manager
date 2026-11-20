@@ -36,12 +36,14 @@ public class DoisFatoresService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final AcademiaAtual academiaAtual;
+    private final DispositivosConfiaveis dispositivos;
 
     public DoisFatoresService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                              AcademiaAtual academiaAtual) {
+                              AcademiaAtual academiaAtual, DispositivosConfiaveis dispositivos) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.academiaAtual = academiaAtual;
+        this.dispositivos = dispositivos;
     }
 
     private Usuario eu() {
@@ -51,7 +53,17 @@ public class DoisFatoresService {
 
     public DoisFatoresStatus status() {
         Usuario u = eu();
-        return new DoisFatoresStatus(u.doisFatoresAtivo(), u.getTotpAtivadoEm(), contarCodigos(u));
+        return new DoisFatoresStatus(u.doisFatoresAtivo(), u.getTotpAtivadoEm(), contarCodigos(u),
+                dispositivos.listar(u.getId()).stream().map(DispositivoResponse::de).toList());
+    }
+
+    /** Para de lembrar um navegador: nele, o próximo login volta a pedir o código. */
+    public void esquecerDispositivo(Long id) {
+        dispositivos.esquecer(eu().getId(), id);
+    }
+
+    public void esquecerTodosDispositivos() {
+        dispositivos.esquecerTodos(eu().getId());
     }
 
     /** Passo 1 da ativação: gera um segredo novo e o QR Code para o aplicativo ler. */
@@ -96,6 +108,7 @@ public class DoisFatoresService {
         if (!verificarSegundoFator(u, req.codigo())) throw new RegraNegocioException("Código incorreto.");
         limpar(u);
         usuarioRepository.save(u);
+        dispositivos.esquecerTodos(u.getId());
     }
 
     /**

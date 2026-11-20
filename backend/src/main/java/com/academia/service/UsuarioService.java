@@ -15,7 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-/** Gestão dos usuários da própria academia (somente administradores chegam aqui). */
+/**
+ * Gestão dos usuários da própria academia (somente administradores chegam aqui).
+ * O dono de uma rede não aparece nem pode ser alterado por aqui: ele é gerenciado acima das unidades.
+ */
 @Service
 public class UsuarioService {
 
@@ -23,27 +26,37 @@ public class UsuarioService {
     private final SessaoRepository sessaoRepository;
     private final PasswordEncoder passwordEncoder;
     private final AcademiaAtual academiaAtual;
+    private final DispositivosConfiaveis dispositivos;
 
     public UsuarioService(UsuarioRepository usuarioRepository, SessaoRepository sessaoRepository,
-                          PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual) {
+                          PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual, DispositivosConfiaveis dispositivos) {
         this.usuarioRepository = usuarioRepository;
         this.sessaoRepository = sessaoRepository;
         this.passwordEncoder = passwordEncoder;
         this.academiaAtual = academiaAtual;
+        this.dispositivos = dispositivos;
     }
 
     public List<UsuarioResponse> listar() {
-        return usuarioRepository.findByAcademiaIdOrderByNomeAsc(academiaAtual.id()).stream()
+        return usuarioRepository.findByAcademiaIdAndPerfilNotOrderByNomeAsc(academiaAtual.id(), Perfil.DONO).stream()
                 .map(UsuarioResponse::de).toList();
     }
 
     private Usuario buscar(Long id) {
-        return usuarioRepository.findByIdAndAcademiaId(id, academiaAtual.id())
+        return usuarioRepository.findByIdAndAcademiaIdAndPerfilNot(id, academiaAtual.id(), Perfil.DONO)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário " + id + " não encontrado"));
+    }
+
+    /** Dentro de uma unidade só existem administradores e funcionários; dono de rede não se cria por aqui. */
+    private static void validarPerfil(Perfil perfil) {
+        if (perfil == Perfil.DONO) {
+            throw new RegraNegocioException("O perfil de dono da rede não pode ser atribuído a usuários da unidade.");
+        }
     }
 
     @Transactional
     public UsuarioResponse criar(UsuarioRequest req) {
+        validarPerfil(req.perfil());
         if (req.senha() == null || req.senha().isBlank()) {
             throw new RegraNegocioException("Informe uma senha com pelo menos 8 caracteres.");
         }
@@ -63,6 +76,7 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponse atualizar(Long id, UsuarioRequest req) {
+        validarPerfil(req.perfil());
         Usuario u = buscar(id);
         String email = AuthService.normalizarEmail(req.email());
         if (usuarioRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
@@ -85,6 +99,8 @@ public class UsuarioService {
         usuarioRepository.save(u);
         // Senha trocada ou usuário desativado: as sessões abertas dele deixam de valer
         if (!ehVoce && (trocouSenha || !ativo)) sessaoRepository.apagarDoUsuario(u.getId());
+        // Senha trocada: os navegadores lembrados dele voltam a pedir o código das duas etapas
+        if (trocouSenha) dispositivos.esquecerTodos(u.getId());
         return UsuarioResponse.de(u);
     }
 
@@ -96,6 +112,7 @@ public class UsuarioService {
         }
         if (u.getPerfil() == Perfil.ADMIN && u.isAtivo()) garantirOutroAdmin();
         sessaoRepository.apagarDoUsuario(u.getId());
+        dispositivos.esquecerTodos(u.getId());
         usuarioRepository.delete(u);
     }
 
@@ -115,12 +132,16 @@ public class UsuarioService {
         DoisFatoresService.limpar(u);
         usuarioRepository.save(u);
         sessaoRepository.apagarDoUsuario(u.getId());
+        dispositivos.esquecerTodos(u.getId());
         return UsuarioResponse.de(u);
     }
 
-    /** A academia nunca pode ficar sem nenhum administrador ativo. */
+    /** A academia nunca pode ficar sem nenhum administrador ativo (o dono da rede, se for desta unidade, também conta). */
     private void garantirOutroAdmin() {
-        if (usuarioRepository.countByAcademiaIdAndPerfilAndAtivoTrue(academiaAtual.id(), Perfil.ADMIN) <= 1) {
+        Long id = academiaAtual.id();
+        long admins = usuarioRepository.countByAcademiaIdAndPerfilAndAtivoTrue(id, Perfil.ADMIN)
+                + usuarioRepository.countByAcademiaIdAndPerfilAndAtivoTrue(id, Perfil.DONO);
+        if (admins <= 1) {
             throw new RegraNegocioException("A academia precisa de pelo menos um administrador ativo.");
         }
     }

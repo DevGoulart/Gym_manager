@@ -25,8 +25,20 @@ let sessao = null; // { usuario: {...}, academia: {...} }
 
 function lerToken() { try { return localStorage.getItem(CHAVE_TOKEN); } catch { return null; } }
 function salvarToken(t) { try { localStorage.setItem(CHAVE_TOKEN, t); } catch { /* navegador sem armazenamento */ } }
+/* "Lembrar deste dispositivo": token por e-mail, guardado só neste navegador (o servidor guarda o hash) */
+const CHAVE_DISPOSITIVOS = 'forcatotal.dispositivos';
+const lerDispositivos = () => { try { return JSON.parse(localStorage.getItem(CHAVE_DISPOSITIVOS)) || {}; } catch { return {}; } };
+const gravarDispositivos = (d) => { try { localStorage.setItem(CHAVE_DISPOSITIVOS, JSON.stringify(d)); } catch { /* sem armazenamento */ } };
+const chaveEmail = (email) => String(email || '').trim().toLowerCase();
+const lerDispositivo = (email) => lerDispositivos()[chaveEmail(email)] || null;
+function salvarDispositivo(email, token) { const d = lerDispositivos(); d[chaveEmail(email)] = token; gravarDispositivos(d); }
+function apagarDispositivo(email) { const d = lerDispositivos(); delete d[chaveEmail(email)]; gravarDispositivos(d); }
+let emailDoLogin = null; // e-mail digitado no login, para guardar o token depois do código
+
 function apagarToken() { try { localStorage.removeItem(CHAVE_TOKEN); } catch { /* ignora */ } }
-const ehAdmin = () => sessao?.usuario?.perfil === 'ADMIN';
+// O dono da rede tem os mesmos poderes de um administrador dentro da unidade que abriu
+const ehAdmin = () => ['ADMIN', 'DONO'].includes(sessao?.usuario?.perfil);
+const ehDono = () => sessao?.usuario?.perfil === 'DONO';
 
 async function requisitar(caminho, method, body) {
   const token = lerToken();
@@ -592,17 +604,18 @@ function irPara(modulo, params = {}) {
 /** Atualiza a URL (para recarregar/compartilhar com os mesmos filtros) sem redesenhar a tela. */
 const atualizarUrl = (modulo, params) => history.replaceState(null, '', montarHash(modulo, params));
 
-const ORDEM_MODULOS = ['dashboard', 'alunos', 'planos', 'mensalidades', 'professores', 'treinos', 'avaliacoes', 'usuarios'];
+const ORDEM_MODULOS = ['dashboard', 'alunos', 'planos', 'mensalidades', 'professores', 'treinos', 'avaliacoes', 'usuarios', 'rede'];
 const ROTULOS = {
   dashboard: 'Painel de controle', alunos: 'Gestão de alunos', planos: 'Planos e preços', mensalidades: 'Financeiro',
-  professores: 'Equipe', treinos: 'Treinos', avaliacoes: 'Acompanhamento', usuarios: 'Acesso ao sistema',
+  professores: 'Equipe', treinos: 'Treinos', avaliacoes: 'Acompanhamento', usuarios: 'Acesso ao sistema', rede: 'Rede de academias', perfil: 'Sua conta',
 };
 
 /** Título em duas linhas: a primeira em vermelho, a segunda só com contorno. Ex.: 'Nossos|Alunos'. */
 function cabecalho(titulo, subtitulo, acoes = '', rotulo = '') {
   const [l1, l2 = ''] = titulo.split('|');
   const { modulo } = rotaAtual();
-  const n = String(Math.max(ORDEM_MODULOS.indexOf(modulo), 0) + 1).padStart(2, '0');
+  // A rede fica acima dos módulos: 00
+  const n = modulo === 'rede' ? '00' : modulo === 'perfil' ? '—' : String(Math.max(ORDEM_MODULOS.indexOf(modulo), 0) + 1).padStart(2, '0');
   $('#kicker').innerHTML = `<b>${n}</b> &nbsp;/&nbsp; ${esc(rotulo || ROTULOS[modulo] || l1)}`;
   $('#titulo .t1').textContent = l1;
   $('#titulo .t2').textContent = l2;
@@ -1573,8 +1586,165 @@ ACOES.excluirAvaliacao = async (id) => {
   renderizar();
 };
 
+/* ---------------------------- REDE (dono da rede) ---------------------------- */
+TELAS.rede = async () => {
+  if (!ehDono()) {
+    cabecalho('Rede de|Academias', 'O painel da rede é exclusivo do dono da rede.');
+    conteudo.innerHTML = `<div class="painel vazio"><strong>Acesso restrito</strong>${ehAdmin() && !sessao.rede
+      ? 'Tem mais de uma unidade? Use <b>Transformar em rede</b> no menu da sua conta.' : 'Somente o dono da rede vê todas as unidades.'}</div>`;
+    return;
+  }
+  const { rede, unidades, totais } = await api('/rede');
+  sessao.rede = rede;
+  const cheia = unidades.length >= rede.limiteUnidades;
+  cabecalho('Minha|Rede', `Todas as unidades da <b>${esc(rede.nome)}</b>, cada uma com os seus próprios dados e administradores. Só você vê todas.`,
+    cheia ? `<button class="primario" disabled title="O plano Rede permite até ${rede.limiteUnidades} unidades">Limite de ${rede.limiteUnidades} unidades</button>`
+          : '<button class="primario" data-acao="novaUnidade">+ Nova unidade</button>',
+    'Rede de academias');
+  const maiorReceita = Math.max(1, ...unidades.map((u) => Number(u.numeros.recebidoNoMes)));
+  const destaque = (valor, rotulo, fantasma, escuro = false) =>
+    `<div class="destaque ${escuro ? 'escuro' : ''}"><span class="fantasma" aria-hidden="true">${fantasma}</span><span class="valor">${valor}</span><span class="rotulo">${rotulo}</span></div>`;
+  const numero = (v, r, cls = '') => `<div class="un-num ${cls}"><b>${v}</b><span>${r}</span></div>`;
+  conteudo.innerHTML = `
+    <div class="destaques">
+      ${destaque(`${totais.unidades}<small> / ${rede.limiteUnidades}</small>`, 'Unidades da rede', totais.unidades)}
+      ${destaque(totais.alunosAtivos, 'Alunos ativos na rede', totais.alunosAtivos)}
+      ${destaque(moeda(totais.recebidoNoMes), 'Recebido no mês (rede)', 'R$')}
+      ${destaque(moeda(totais.valorEmAberto), `Em aberto · ${totais.mensalidadesAtrasadas} atrasada(s)`, '$', true)}
+    </div>
+    <h2 class="titulo-secao">Suas <span>unidades</span></h2>
+    <div class="unidades-grade">${unidades.map((u) => `
+      <article class="unidade-cartao ${u.aberta ? 'aberta' : ''}">
+        <header class="unidade-topo">
+          <div><h3>${esc(u.nome)}</h3><small>${esc(u.cidade || 'Cidade não informada')}</small></div>
+          <div class="unidade-selos">${u.aberta ? badge(['Aberta agora', 'b-ok']) : ''}${u.sede ? badge(['Sua unidade', 'b-mute']) : ''}</div>
+        </header>
+        <div class="unidade-numeros">
+          ${numero(u.numeros.alunosAtivos, 'Alunos ativos')}
+          ${numero(u.numeros.mensalidadesAtrasadas, 'Atrasadas', u.numeros.mensalidadesAtrasadas ? 'alerta' : '')}
+          ${numero(u.numeros.professores, 'Professores')}
+          ${numero(u.usuarios, 'Usuários')}
+        </div>
+        <div class="unidade-receita">
+          <div><span>Recebido no mês</span><b>${moeda(u.numeros.recebidoNoMes)}</b></div>
+          <div class="unidade-barra" aria-hidden="true"><i style="width:${Math.round((Number(u.numeros.recebidoNoMes) / maiorReceita) * 100)}%"></i></div>
+          <small>Em aberto: ${moeda(u.numeros.valorEmAberto)}</small>
+        </div>
+        <div class="unidade-admins">
+          <span class="rotulo">Administradores</span>
+          ${u.administradores.length ? `<ul>${u.administradores.map((ad) => `<li><b>${esc(ad.nome)}</b><small>${esc(ad.email)}${ad.ativo ? '' : ' · desativado'}</small></li>`).join('')}</ul>`
+            : '<p class="unidade-sem-admin">Nenhum administrador. Esta unidade é gerida só por você.</p>'}
+        </div>
+        <footer class="unidade-acoes">
+          ${u.aberta ? '<a class="btn primario pequeno" href="#/dashboard">Ir para o painel</a>'
+                    : `<button class="primario pequeno" data-acao="abrirUnidade" data-id="${u.id}">Abrir unidade</button>`}
+          <button class="pequeno" data-acao="novoAdminUnidade" data-id="${u.id}">+ Administrador</button>
+          <button class="pequeno" data-acao="editarUnidade" data-id="${u.id}">Editar</button>
+        </footer>
+      </article>`).join('')}
+      ${cheia ? '' : `<button type="button" class="unidade-nova" data-acao="novaUnidade"><span>+</span>Nova unidade<small>${unidades.length} de ${rede.limiteUnidades} usadas</small></button>`}
+    </div>
+    <p class="dica rede-dica">Abrir uma unidade troca o sistema inteiro para ela: alunos, planos, mensalidades e usuários passam a ser dessa unidade, com poderes de administrador. Os administradores de cada unidade continuam vendo só a própria.</p>`;
+};
+
+const camposAdmin = () => [
+  { nome: 'adminNome', rotulo: 'Nome do administrador', obrigatorio: true, full: true, autocomplete: 'off',
+    validar: (v) => (v.split(/\s+/).length < 2 ? 'Informe nome e sobrenome' : null) },
+  { nome: 'adminEmail', rotulo: 'E-mail (login)', tipo: 'email', obrigatorio: true, full: true, autocomplete: 'off', erroServidor: /e-mail/i },
+  { nome: 'adminSenha', rotulo: 'Senha inicial', tipo: 'password', obrigatorio: true, autocomplete: 'new-password', placeholder: '8 caracteres ou mais',
+    dica: 'Passe a senha para a pessoa, que pode trocá-la depois.',
+    validar: (v) => (v.length < 8 ? 'A senha precisa de pelo menos 8 caracteres' : v.length > 72 ? 'Máximo de 72 caracteres' : null) },
+];
+
+ACOES.novaUnidade = () => abrirFormulario({
+  titulo: 'Nova unidade',
+  textoBotao: 'Criar unidade',
+  campos: [
+    { secao: 'Unidade' },
+    { nome: 'nome', rotulo: 'Nome da unidade', obrigatorio: true, full: true, placeholder: 'Ex.: Unidade Jardins' },
+    { nome: 'cidade', rotulo: 'Cidade', full: true },
+    { secao: 'Administrador da unidade' },
+    { html: '<p class="dica">Toda unidade tem o seu administrador. Ele cuida só desta unidade e não vê as outras.</p>' },
+    ...camposAdmin(),
+  ],
+  salvar: async (d) => {
+    const u = await api('/rede/unidades', { method: 'POST', body: {
+      nome: d.nome, cidade: d.cidade || null, admin: { nome: d.adminNome, email: d.adminEmail, senha: d.adminSenha } } });
+    aviso(`Unidade “${u.nome}” criada. ${d.adminEmail} já pode entrar como administrador.`);
+    renderizar();
+  },
+});
+
+ACOES.editarUnidade = async (id) => {
+  const u = (await api('/rede')).unidades.find((x) => x.id === id);
+  abrirFormulario({
+    titulo: 'Editar unidade',
+    textoBotao: 'Salvar',
+    campos: [
+      { nome: 'nome', rotulo: 'Nome da unidade', obrigatorio: true, full: true },
+      { nome: 'cidade', rotulo: 'Cidade', full: true },
+    ],
+    valores: u,
+    salvar: async (d) => {
+      const r = await api(`/rede/unidades/${id}`, { method: 'PUT', body: { nome: d.nome, cidade: d.cidade || null } });
+      if (sessao.academia.id === id) { sessao.academia = r; atualizarCabecalhoUsuario(); }
+      aviso('Unidade atualizada.');
+      renderizar();
+    },
+  });
+};
+
+ACOES.novoAdminUnidade = async (id) => {
+  const u = (await api('/rede')).unidades.find((x) => x.id === id);
+  abrirFormulario({
+    titulo: `Administrador · ${u.nome}`,
+    textoBotao: 'Cadastrar administrador',
+    campos: [{ html: `<p class="dica">Esta pessoa vai administrar só a <b>${esc(u.nome)}</b>: alunos, planos, mensalidades e usuários dela.</p>` }, ...camposAdmin()],
+    salvar: async (d) => {
+      await api(`/rede/unidades/${id}/admins`, { method: 'POST', body: { nome: d.adminNome, email: d.adminEmail, senha: d.adminSenha } });
+      aviso(`${d.adminEmail} agora administra a ${u.nome}.`);
+      renderizar();
+    },
+  });
+};
+
+/** Troca a unidade em que o dono está agindo: todas as telas passam a mostrar os dados dela. */
+ACOES.abrirUnidade = async (id) => {
+  const r = await api(`/rede/unidades/${id}/abrir`, { method: 'POST' });
+  sessao = { usuario: r.usuario, academia: r.academia, rede: r.rede };
+  cacheGet.clear();
+  ultimoModulo = null;
+  atualizarCabecalhoUsuario();
+  aviso(`Você está na ${r.academia.nome}.`);
+  irPara('dashboard');
+};
+
+/** Upgrade: a academia avulsa vira a primeira unidade de uma rede, e o administrador vira o dono. */
+ACOES.converterRede = () => {
+  fecharMenuUsuario();
+  abrirFormulario({
+    titulo: 'Transformar em rede',
+    textoBotao: 'Criar rede',
+    campos: [
+      { html: `<p class="dica">No <b>plano Rede</b>, você vira o <b>dono da rede</b>: vê todas as unidades num só painel, cria até 5 unidades e cadastra o administrador de cada uma.
+        A <b>${esc(sessao.academia.nome)}</b> vira a primeira unidade, com todos os dados de hoje. Os outros usuários continuam como estão.</p>` },
+      { nome: 'nomeRede', rotulo: 'Nome da rede', obrigatorio: true, full: true, placeholder: 'Ex.: Rede Corpo em Forma' },
+    ],
+    salvar: async (d) => {
+      const r = await api('/rede/converter', { method: 'POST', body: { nomeRede: d.nomeRede } });
+      sessao = { usuario: r.usuario, academia: r.academia, rede: r.rede };
+      cacheGet.clear();
+      ultimoModulo = null;
+      atualizarCabecalhoUsuario();
+      aviso(`Rede “${r.rede.nome}” criada. Agora você pode cadastrar as outras unidades.`);
+      irPara('rede');
+    },
+  });
+};
+
 /* ---------------------------- USUÁRIOS (admin) ---------------------------- */
 const PERFIS = {
+  DONO: ['Dono da rede', 'b-warn'],
   ADMIN: ['Administrador', 'b-danger'],
   FUNCIONARIO: ['Funcionário', 'b-info'],
 };
@@ -1667,6 +1837,7 @@ ACOES.alterarSenha = () => {
     ],
     salvar: async (dados) => {
       await api('/auth/senha', { method: 'POST', body: { senhaAtual: dados.senhaAtual, novaSenha: dados.novaSenha } });
+      apagarDispositivo(sessao.usuario.email); // senha nova: dispositivos lembrados voltam a pedir o código
       aviso('Senha alterada.');
     },
   });
@@ -1686,18 +1857,23 @@ function atualizarCabecalhoUsuario() {
   $('#menuEmail').textContent = usuario.email;
   $('#menuPerfil').className = 'badge ' + PERFIS[usuario.perfil][1];
   $('#menuPerfil').textContent = PERFIS[usuario.perfil][0];
-  $('#menuDoisFatores').className = 'badge ' + (usuario.doisFatores ? 'b-ok' : 'b-mute');
-  $('#menuDoisFatores').textContent = usuario.doisFatores ? 'Ativa' : 'Desligada';
   document.body.classList.toggle('perfil-admin', ehAdmin());
+  document.body.classList.toggle('perfil-dono', ehDono());
+  // Administrador de academia avulsa pode transformá-la em rede
+  document.body.classList.toggle('pode-converter', usuario.perfil === 'ADMIN' && !sessao.rede);
+  if (ehDono()) {
+    $('#barraUnidade').innerHTML = `<span>${esc(sessao.rede?.nome || 'Rede')}</span><span>Você está na <b>${esc(academia.nome)}</b></span><a class="link" href="#/rede">Trocar unidade</a>`;
+  }
 }
 
 function entrarNoApp(dados) {
-  sessao = { usuario: dados.usuario, academia: dados.academia };
+  sessao = { usuario: dados.usuario, academia: dados.academia, rede: dados.rede || null };
   cacheGet.clear(); // nunca reaproveitar dados de outra academia/usuário
   ultimoModulo = null;
   atualizarCabecalhoUsuario();
   document.body.classList.remove('nao-logado', 'verificando');
   if (!ehAdmin() && rotaAtual().modulo === 'usuarios') location.hash = '#/dashboard';
+  if (!ehDono() && rotaAtual().modulo === 'rede') location.hash = '#/dashboard';
   renderizar();
   // Primeiro acesso deste usuário neste navegador: abre o tutorial guiado (js/tutorial.js)
   contextoTutorial().then((ctx) => { if (ctx) window.Tutorial?.aoEntrar(ctx); });
@@ -1709,7 +1885,7 @@ async function contextoTutorial() {
   let comecando = false;
   try { const d = await api('/dashboard'); comecando = d.totalAlunos === 0 && d.planosAtivos === 0; } catch { /* segue sem o passo extra */ }
   if (!sessao) return null;
-  return { usuarioId: sessao.usuario.id, academiaId: sessao.academia.id, nome: sessao.usuario.nome, academia: sessao.academia.nome, admin: ehAdmin(), comecando };
+  return { usuarioId: sessao.usuario.id, academiaId: sessao.academia.id, nome: sessao.usuario.nome, academia: sessao.academia.nome, admin: ehAdmin(), dono: ehDono(), rede: sessao.rede?.nome, comecando };
 }
 
 ACOES.tutorial = async () => {
@@ -1726,7 +1902,7 @@ function encerrarSessao(mensagem) {
   ultimoModulo = null;
   fecharModal();
   fecharMenuUsuario();
-  document.body.classList.remove('verificando', 'perfil-admin');
+  document.body.classList.remove('verificando', 'perfil-admin', 'perfil-dono', 'pode-converter');
   document.body.classList.add('nao-logado');
   conteudo.innerHTML = '';
   document.title = 'Entrar · Força Total';
@@ -1813,6 +1989,8 @@ async function enviarAcesso(form, caminho, corpo) {
     salvarToken(r.token);
     form.reset();
     entrarNoApp(r);
+    // Dispositivo lembrado: as duas etapas foram dispensadas neste navegador
+    if (r.dispositivoExpiraEm && !r.dispositivo) aviso(`Dispositivo lembrado: o código das duas etapas não será pedido aqui até ${data(r.dispositivoExpiraEm.slice(0, 10))}.`);
     return r;
   } catch (err) {
     // "Já existe uma conta com este e-mail" pertence ao campo; o resto (senha errada, bloqueio...) é geral
@@ -1831,13 +2009,32 @@ $('#formLogin').addEventListener('submit', async (e) => {
     email: (x) => (!x ? 'Informe seu e-mail' : !EMAIL_OK.test(x) ? 'E-mail inválido' : null),
     senha: exigir('Informe sua senha'),
   });
-  if (v) await enviarAcesso(e.currentTarget, '/auth/login', { email: v.email, senha: $('#loginSenha').value });
+  if (!v) return;
+  emailDoLogin = v.email;
+  await enviarAcesso(e.currentTarget, '/auth/login', { email: v.email, senha: $('#loginSenha').value, dispositivo: lerDispositivo(v.email) });
 });
+
+/* Cadastro: "Uma academia" ou "Rede de academias" (plano Rede) */
+function ajustarTipoCadastro() {
+  const rede = $('#formCadastro input[name=tipo]:checked')?.value === 'REDE';
+  $('#formCadastro [data-campo=nomeRede]').hidden = !rede;
+  $('#rotuloCadAcademia').textContent = rede ? 'Nome da primeira unidade' : 'Nome da academia';
+  $('#cadAcademia').placeholder = rede ? 'Ex.: Unidade Centro' : 'Ex.: Academia Corpo em Forma';
+  $('#formCadastro h2').innerHTML = rede ? 'Cadastre sua <span>rede</span>' : 'Cadastre sua <span>academia</span>';
+  $('#cadSub').textContent = rede
+    ? 'Você vira o dono da rede: vê todas as unidades e cadastra o administrador de cada uma.'
+    : 'Em um minuto: você vira o administrador e já começa a usar.';
+  $('#cadBotao').textContent = rede ? 'Criar rede e entrar' : 'Criar academia e entrar';
+}
+$('#formCadastro').addEventListener('change', (e) => { if (e.target.name === 'tipo') ajustarTipoCadastro(); });
+$('#formCadastro').addEventListener('reset', () => setTimeout(ajustarTipoCadastro));
 
 $('#formCadastro').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const rede = $('#formCadastro input[name=tipo]:checked')?.value === 'REDE';
   const v = validarAcesso(e.currentTarget, {
-    nomeAcademia: exigir('Informe o nome da academia'),
+    ...(rede ? { nomeRede: exigir('Informe o nome da rede') } : {}),
+    nomeAcademia: exigir(rede ? 'Informe o nome da primeira unidade' : 'Informe o nome da academia'),
     nome: (x) => (!x ? 'Informe seu nome' : x.split(/\s+/).length < 2 ? 'Informe nome e sobrenome' : null),
     email: (x) => (!x ? 'Informe seu e-mail' : !EMAIL_OK.test(x) ? 'E-mail inválido' : null),
     senha: (x) => (x.length < 8 ? 'A senha precisa de pelo menos 8 caracteres' : null),
@@ -1846,8 +2043,10 @@ $('#formCadastro').addEventListener('submit', async (e) => {
   if (!v) return;
   const r = await enviarAcesso(e.currentTarget, '/auth/cadastro', {
     nomeAcademia: v.nomeAcademia, cidade: v.cidade || null, nome: v.nome, email: v.email, senha: $('#cadSenha').value,
+    tipo: rede ? 'REDE' : 'ACADEMIA', nomeRede: rede ? v.nomeRede : null,
   });
-  if (r) { location.hash = '#/dashboard'; aviso(`Cadastro concluído: “${r.academia.nome}” já está pronta para uso.`); }
+  if (r && rede) { location.hash = '#/rede'; aviso(`Rede “${r.rede.nome}” criada. Cadastre as outras unidades e os administradores delas.`); }
+  else if (r) { location.hash = '#/dashboard'; aviso(`Cadastro concluído: “${r.academia.nome}” já está pronta para uso.`); }
 });
 
 // Erros somem enquanto a pessoa corrige o campo
@@ -1928,13 +2127,17 @@ $('#formDoisFatores').addEventListener('submit', async (e) => {
   botao.disabled = true;
   botao.textContent = 'Verificando…';
   try {
-    const r = await requisitar('/auth/login/2fa', 'POST', { desafio: desafioAtual, codigo });
+    const lembrar = $('#lembrar2fa').checked;
+    const r = await requisitar('/auth/login/2fa', 'POST', { desafio: desafioAtual, codigo, lembrar });
     salvarToken(r.token);
+    if (r.dispositivo) salvarDispositivo(emailDoLogin || r.usuario.email, r.dispositivo);
     desafioAtual = null;
     form.reset();
     $('#formLogin').reset();
     entrarNoApp(r);
-    if (modoRecuperacao) aviso('Você entrou com um código de recuperação. Ele não vale mais: confira quantos restam em “Verificação em duas etapas”.');
+    const lembrado = r.dispositivo ? ` Neste navegador, o código não será pedido até ${data(r.dispositivoExpiraEm.slice(0, 10))}.` : '';
+    if (modoRecuperacao) aviso('Você entrou com um código de recuperação. Ele não vale mais: confira quantos restam em “Verificação em duas etapas”.' + lembrado);
+    else if (lembrado) aviso('Pronto:' + lembrado);
   } catch (err) {
     // Desafio vencido ou tentativas esgotadas: precisa da senha de novo
     if (/senha de novo|expirou|aguarde/i.test(err.message)) {
@@ -1964,24 +2167,8 @@ function qrSvg(linhas) {
     <rect width="${n}" height="${n}" fill="#fff" stroke="none"/><path d="${d}" fill="#000" stroke="none"/></svg>`;
 }
 
-ACOES.doisFatores = async () => {
-  fecharMenuUsuario();
-  const st = await requisitar('/auth/2fa', 'GET');
-  if (st.ativo) return telaDoisFatoresAtiva(st);
-  abrirModal({
-    titulo: 'Verificação em duas etapas',
-    corpo: `
-      <div class="explica-2fa">
-        <p><b>Proteja sua conta mesmo se alguém descobrir sua senha.</b> Depois de ativar, o login pede também um código de 6 dígitos que muda a cada 30 segundos no seu celular.</p>
-        <ol class="passos-2fa">
-          <li>Instale um aplicativo autenticador no celular: <b>Google Authenticator</b>, <b>Microsoft Authenticator</b> ou <b>Authy</b> (gratuitos).</li>
-          <li>Leia o QR Code que vamos mostrar.</li>
-          <li>Digite o código que aparecer no aplicativo para confirmar.</li>
-        </ol>
-      </div>`,
-    rodape: `<button type="button" data-fechar>Agora não</button><button type="button" class="primario" data-acao="iniciarDoisFatores">Configurar agora</button>`,
-  });
-};
+/** As duas etapas ficam na página "Meu perfil". */
+ACOES.doisFatores = () => { fecharMenuUsuario(); irPara('perfil'); };
 
 ACOES.iniciarDoisFatores = async () => {
   const ini = await requisitar('/auth/2fa/iniciar', 'POST');
@@ -2007,7 +2194,7 @@ ACOES.iniciarDoisFatores = async () => {
       const r = await api('/auth/2fa/ativar', { method: 'POST', body: { codigo: dados.codigo } });
       sessao.usuario.doisFatores = true;
       atualizarCabecalhoUsuario();
-      if (rotaAtual().modulo === 'usuarios') renderizar();
+      if (['usuarios', 'perfil'].includes(rotaAtual().modulo)) renderizar();
       return { sucesso: telaCodigosRecuperacao(r.codigos) };
     },
   });
@@ -2044,27 +2231,203 @@ ACOES.baixarCodigos = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 };
 
-function telaDoisFatoresAtiva(st) {
-  const desde = st.ativadoEm ? data(st.ativadoEm.slice(0, 10)) : '—';
-  abrirFormulario({
-    titulo: 'Verificação em duas etapas',
-    textoBotao: 'Desativar',
-    campos: [
-      { html: `<p class="resumo-modal"><strong>Ativa</strong><br>Desde ${desde} · ${st.codigosRestantes} código(s) de recuperação restante(s)${st.codigosRestantes <= 2 ? ' — <b class="txt-alerta">poucos códigos: desative e ative de novo para gerar outros</b>' : ''}.</p>` },
-      { secao: 'Desativar' },
-      { html: '<p class="dica">Para desligar, confirme sua senha e um código do aplicativo (ou de recuperação). Sem a verificação, sua conta fica protegida só pela senha.</p>' },
-      { nome: 'senha', rotulo: 'Sua senha', tipo: 'password', obrigatorio: true, autocomplete: 'current-password', erroServidor: /senha/i },
-      { nome: 'codigo', rotulo: 'Código do aplicativo', obrigatorio: true, placeholder: '000000 ou XXXXX-XXXXX', erroServidor: /código/i },
-    ],
-    salvar: async (dados) => {
+/* ---------------------------- MEU PERFIL ---------------------------- */
+/* Tudo da própria conta numa página: dados, senha, verificação em duas etapas,
+   dispositivos lembrados, sessões abertas e o tutorial. */
+const campoPerfil = (nome, rotulo, tipo = 'text', extra = '') => `
+  <div class="campo" data-campo="${nome}">
+    <label class="rotulo" for="perfil_${nome}">${rotulo}</label>
+    <input id="perfil_${nome}" name="${nome}" type="${tipo}" ${extra}>
+    <small class="erro-campo" role="alert" hidden></small>
+  </div>`;
+
+TELAS.perfil = async () => {
+  const { usuario, academia, rede } = sessao;
+  cabecalho('Meu|Perfil', `Sua conta no sistema da <b>${esc(academia.nome)}</b>: dados de acesso, senha e segurança.`, '', 'Sua conta');
+  const [st, ses] = await Promise.all([requisitar('/auth/2fa', 'GET'), requisitar('/auth/sessoes', 'GET')]);
+  const quando = (iso) => (iso ? data(iso.slice(0, 10)) : '—');
+  const outras = Math.max(0, ses.abertas - 1);
+  conteudo.innerHTML = `
+    <div class="perfil-grade">
+      <section class="painel perfil-cartao perfil-conta" aria-labelledby="pfConta">
+        <div class="perfil-id">
+          <span class="perfil-avatar" aria-hidden="true">${esc(iniciais(usuario.nome))}</span>
+          <div><h2 id="pfConta">${esc(usuario.nome)}</h2><small>${esc(usuario.email)}</small>${badge(PERFIS[usuario.perfil])}</div>
+        </div>
+        <dl class="perfil-dados">
+          <div><dt>${rede && ehDono() ? 'Unidade aberta' : 'Academia'}</dt><dd>${esc(academia.nome)}</dd></div>
+          ${rede ? `<div><dt>Rede</dt><dd>${esc(rede.nome)}</dd></div>` : ''}
+          <div><dt>Na conta desde</dt><dd>${quando(usuario.criadoEm)}</dd></div>
+        </dl>
+        <form id="formPerfilNome" class="perfil-form" novalidate>
+          ${campoPerfil('nome', 'Nome', 'text', `value="${esc(usuario.nome)}" maxlength="120" autocomplete="name"`)}
+          <button type="submit" class="pequeno primario">Salvar nome</button>
+        </form>
+        <p class="dica">O e-mail é o seu login. Para trocá-lo, fale com um administrador${ehDono() ? ' (ou com o suporte, no caso do dono da rede)' : ''}.</p>
+      </section>
+
+      <section class="painel perfil-cartao" aria-labelledby="pfSenha">
+        <h2 class="titulo-secao" id="pfSenha">Alterar <span>senha</span></h2>
+        <form id="formPerfilSenha" class="perfil-form vertical" novalidate>
+          ${campoPerfil('senhaAtual', 'Senha atual', 'password', 'autocomplete="current-password"')}
+          ${campoPerfil('novaSenha', 'Nova senha', 'password', 'autocomplete="new-password" placeholder="8 caracteres ou mais" maxlength="72"')}
+          ${campoPerfil('confirmar', 'Confirmar nova senha', 'password', 'autocomplete="new-password" maxlength="72"')}
+          <button type="submit" class="primario">Alterar senha</button>
+        </form>
+        <p class="dica">Ao trocar a senha, os dispositivos lembrados voltam a pedir o código das duas etapas.</p>
+      </section>
+
+      <section class="painel perfil-cartao perfil-largo" aria-labelledby="pf2fa">
+        <header class="perfil-topo-secao">
+          <h2 class="titulo-secao" id="pf2fa">Verificação em <span>duas etapas</span></h2>
+          ${st.ativo ? badge(['Ativa', 'b-ok']) : badge(['Desligada', 'b-mute'])}
+        </header>
+        ${st.ativo ? `
+          <p class="perfil-status">Ativa desde <b>${quando(st.ativadoEm)}</b> · <b>${st.codigosRestantes}</b> ${st.codigosRestantes === 1 ? 'código de recuperação restante' : 'códigos de recuperação restantes'}${st.codigosRestantes <= 2 ? ' — <b class="txt-alerta">poucos códigos: desative e ative de novo para gerar outros</b>' : ''}.</p>
+          <h3 class="perfil-subtitulo">Dispositivos lembrados</h3>
+          ${listaDispositivos(st.dispositivos || [])}
+          <details class="perfil-desativar">
+            <summary>Desativar a verificação em duas etapas</summary>
+            <p class="dica">Confirme sua senha e um código do aplicativo (ou de recuperação). Sem a verificação, sua conta fica protegida só pela senha.</p>
+            <form id="formPerfilDesativar" class="perfil-form" novalidate>
+              ${campoPerfil('senha', 'Sua senha', 'password', 'autocomplete="current-password"')}
+              ${campoPerfil('codigo', 'Código do aplicativo', 'text', 'placeholder="000000 ou XXXXX-XXXXX" autocomplete="one-time-code" maxlength="11"')}
+              <button type="submit" class="perigo">Desativar</button>
+            </form>
+          </details>` : `
+          <div class="explica-2fa">
+            <p><b>Proteja sua conta mesmo se alguém descobrir sua senha.</b> Depois de ativar, o login pede também um código de 6 dígitos que muda a cada 30 segundos no seu celular.</p>
+            <ol class="passos-2fa">
+              <li>Instale um aplicativo autenticador no celular: <b>Google Authenticator</b>, <b>Microsoft Authenticator</b> ou <b>Authy</b> (gratuitos).</li>
+              <li>Leia o QR Code que vamos mostrar.</li>
+              <li>Digite o código que aparecer no aplicativo para confirmar.</li>
+            </ol>
+          </div>
+          <button type="button" class="primario" data-acao="iniciarDoisFatores">Ativar verificação em duas etapas</button>`}
+      </section>
+
+      <section class="painel perfil-cartao" aria-labelledby="pfSessoes">
+        <h2 class="titulo-secao" id="pfSessoes">Sessões <span>abertas</span></h2>
+        <p class="perfil-status">Sua conta está aberta em <b>${ses.abertas}</b> ${ses.abertas === 1 ? 'navegador: só este' : 'navegadores, contando este'}.</p>
+        <p class="dica">Esqueceu a conta aberta no computador da recepção ou em outro celular? Encerre as outras sessões: este navegador continua conectado.</p>
+        <button type="button" class="${outras ? 'primario' : ''}" data-acao="encerrarOutrasSessoes" ${outras ? '' : 'disabled'}>${outras === 1 ? 'Encerrar a outra sessão' : outras ? `Encerrar as outras ${outras} sessões` : 'Nenhuma outra sessão aberta'}</button>
+      </section>
+
+      <section class="painel perfil-cartao" aria-labelledby="pfAjuda">
+        <h2 class="titulo-secao" id="pfAjuda">Ajuda</h2>
+        <p class="dica">Reveja o tour pelas telas do sistema, com o que cada parte faz.</p>
+        <button type="button" data-acao="tutorial">Rever o tutorial</button>
+      </section>
+    </div>`;
+
+  // Nome
+  $('#formPerfilNome').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget, nome = form.nome.value.trim();
+    const erro = !nome ? 'Informe seu nome' : nome.split(/\s+/).length < 2 ? 'Informe nome e sobrenome' : null;
+    mostrarErroCampo(form, 'nome', erro);
+    if (erro) return form.nome.focus();
+    await enviarPerfil(form, async () => {
+      const u = await api('/auth/eu', { method: 'PUT', body: { nome } });
+      sessao.usuario = { ...sessao.usuario, nome: u.nome };
+      atualizarCabecalhoUsuario();
+      aviso('Nome atualizado.');
+      renderizar();
+    });
+  });
+
+  // Senha
+  $('#formPerfilSenha').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget, v = { senhaAtual: form.senhaAtual.value, novaSenha: form.novaSenha.value, confirmar: form.confirmar.value };
+    const erros = {
+      senhaAtual: !v.senhaAtual ? 'Informe sua senha atual' : null,
+      novaSenha: v.novaSenha.length < 8 ? 'A senha precisa de pelo menos 8 caracteres' : v.novaSenha === v.senhaAtual ? 'Use uma senha diferente da atual' : null,
+      confirmar: v.confirmar !== v.novaSenha ? 'As senhas não conferem' : null,
+    };
+    Object.entries(erros).forEach(([k, m]) => mostrarErroCampo(form, k, m));
+    const primeiro = Object.keys(erros).find((k) => erros[k]);
+    if (primeiro) return form[primeiro].focus();
+    await enviarPerfil(form, async () => {
+      await api('/auth/senha', { method: 'POST', body: { senhaAtual: v.senhaAtual, novaSenha: v.novaSenha } });
+      apagarDispositivo(sessao.usuario.email); // senha nova: dispositivos lembrados voltam a pedir o código
+      form.reset();
+      aviso('Senha alterada.');
+      renderizar();
+    }, { 'senha atual': 'senhaAtual' });
+  });
+
+  // Desativar duas etapas
+  $('#formPerfilDesativar')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.currentTarget, dados = { senha: form.senha.value, codigo: form.codigo.value.trim() };
+    mostrarErroCampo(form, 'senha', dados.senha ? null : 'Informe sua senha');
+    mostrarErroCampo(form, 'codigo', dados.codigo ? null : 'Informe o código do aplicativo');
+    if (!dados.senha) return form.senha.focus();
+    if (!dados.codigo) return form.codigo.focus();
+    await enviarPerfil(form, async () => {
       await api('/auth/2fa/desativar', { method: 'POST', body: dados });
+      apagarDispositivo(sessao.usuario.email); // o servidor também esqueceu todos
       sessao.usuario.doisFatores = false;
       atualizarCabecalhoUsuario();
       aviso('Verificação em duas etapas desativada.');
-      if (rotaAtual().modulo === 'usuarios') renderizar();
-    },
+      renderizar();
+    }, { senha: 'senha', 'código': 'codigo' });
   });
+};
+
+/**
+ * Envia um formulário da página de perfil: trava o botão e mostra o erro do servidor
+ * no campo certo (mapa "trecho da mensagem" → campo) ou no primeiro campo.
+ */
+async function enviarPerfil(form, acao, camposPorMensagem = {}) {
+  const botao = $('button[type=submit]', form);
+  if (botao.disabled) return;
+  botao.disabled = true;
+  try {
+    await acao();
+  } catch (err) {
+    const chave = Object.keys(camposPorMensagem).find((k) => err.message.toLowerCase().includes(k));
+    const campo = chave ? camposPorMensagem[chave] : form.querySelector('[data-campo]')?.dataset.campo;
+    if (!campo || !mostrarErroCampo(form, campo, err.message)) aviso(err.message, true);
+    else form[campo]?.focus();
+  } finally {
+    botao.disabled = false;
+  }
 }
+
+function listaDispositivos(lista) {
+  if (!lista.length) {
+    return '<p class="dica">Nenhum. Ao entrar, marque <b>Lembrar deste dispositivo por 30 dias</b> para não digitar o código naquele navegador.</p>';
+  }
+  const quando = (iso) => (iso ? data(iso.slice(0, 10)) : '—');
+  return `<p class="dica">Nestes navegadores, o login pede só a senha. Trocar a senha ou desligar as duas etapas esquece todos.</p>
+    <ul class="dispositivos-lista">${lista.map((d) => `
+      <li><div><b>${esc(d.descricao)}</b><small>Lembrado em ${quando(d.criadoEm)} · válido até ${quando(d.expiraEm)}${d.ultimoUsoEm ? ` · último uso ${quando(d.ultimoUsoEm)}` : ''}</small></div>
+        <button type="button" class="pequeno" data-acao="esquecerDispositivo" data-id="${d.id}">Esquecer</button></li>`).join('')}
+    </ul>
+    ${lista.length > 1 ? '<button type="button" class="pequeno perigo" data-acao="esquecerTodosDispositivos">Esquecer todos</button>' : ''}`;
+}
+
+ACOES.esquecerDispositivo = async (id) => {
+  await api(`/auth/2fa/dispositivos/${id}`, { method: 'DELETE' });
+  aviso('Dispositivo esquecido: nele, o próximo login vai pedir o código.');
+  renderizar();
+};
+
+ACOES.esquecerTodosDispositivos = async () => {
+  await api('/auth/2fa/dispositivos', { method: 'DELETE' });
+  apagarDispositivo(sessao.usuario.email);
+  aviso('Todos os dispositivos foram esquecidos.');
+  renderizar();
+};
+
+ACOES.encerrarOutrasSessoes = async () => {
+  if (!(await confirmar('Encerrar a sua conta em todos os <b>outros</b> navegadores?<br>Quem estiver usando a sua conta neles vai precisar entrar de novo. Este navegador continua conectado.', 'Encerrar'))) return;
+  const r = await api('/auth/sessoes/outras', { method: 'DELETE' });
+  aviso('Pronto: sua conta continua aberta só neste navegador.');
+  renderizar();
+};
 
 ACOES.redefinirDoisFatores = async (id) => {
   const u = (await api('/usuarios')).find((x) => x.id === id);

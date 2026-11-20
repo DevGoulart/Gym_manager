@@ -73,14 +73,38 @@ O sistema atende **várias academias ao mesmo tempo**. Cada academia tem os pró
   - cada login gera um token aleatório que vale por 12 horas, e o banco guarda apenas o hash SHA-256 desse token;
   - depois de 5 senhas erradas em 15 minutos, o login daquele e-mail fica bloqueado;
   - toda consulta é filtrada pela academia de quem está logado. Um id de outra academia responde 404, como se não existisse.
-- **Verificação em duas etapas (opcional, por usuário):** no menu do usuário → *Verificação em duas etapas*. O usuário lê um QR Code com um aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou Authy) e, a partir daí, o login pede também o código de 6 dígitos que muda a cada 30 segundos. Detalhes:
+- **Meu perfil** (menu do usuário → *Meu perfil*, rota `#/perfil`): página com tudo da própria conta. Mostra os dados (nome, e-mail, perfil, academia/unidade, rede e desde quando), permite trocar o próprio nome e a senha, traz a verificação em duas etapas (ativar, desativar, códigos restantes e dispositivos lembrados) e as **sessões abertas**, com *Encerrar as outras sessões* (este navegador continua conectado). Também tem o botão para rever o tutorial. O e-mail, que é o login, só o administrador troca.
+- **Verificação em duas etapas (opcional, por usuário):** em *Meu perfil* → *Verificação em duas etapas*. O usuário lê um QR Code com um aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou Authy) e, a partir daí, o login pede também o código de 6 dígitos que muda a cada 30 segundos. Detalhes:
   - na ativação aparecem 8 **códigos de recuperação**, de uso único, para quem perder o celular. Eles não são mostrados de novo;
   - um código já usado não vale outra vez, e códigos errados contam para o bloqueio de tentativas;
   - para desligar, é preciso a senha e um código;
   - se alguém perder o celular e os códigos, o administrador usa *Redefinir 2 etapas* na tela de usuários;
+  - **Lembrar deste dispositivo por 30 dias:** opção na tela do código (desmarcada por padrão; não use em computadores compartilhados). Naquele navegador, o login pede só a senha até a data de validade, que não se renova sozinha. O navegador guarda um token aleatório e o banco guarda só o hash dele (tabela `dispositivos_confiaveis`). O token só vale para a mesma pessoa e nunca dispensa a senha. Na tela *Verificação em duas etapas* aparece a lista de dispositivos lembrados (navegador, sistema, desde quando, válido até), com *Esquecer* em cada um ou em todos. Trocar a senha, desligar as duas etapas, a redefinição pelo administrador e a exclusão do usuário esquecem todos os dispositivos dele. Cada pessoa tem no máximo 10 dispositivos lembrados. Código em `service/DispositivosConfiaveis.java`;
   - os códigos seguem o padrão TOTP (RFC 6238), implementado em `security/Totp.java`. O QR Code é gerado com a biblioteca ZXing.
 - **Bancos antigos:** ao subir esta versão, os dados que já existiam passam para a academia padrão. Um backup do banco anterior ficou em `backend/data/backup-antes-do-login/`.
 - **App Android:** como a API agora exige login, o app da pasta `android` deixa de funcionar até ganhar uma tela de login.
+
+### Plano Rede: dono com várias unidades
+
+Para quem tem mais de uma academia. Cada unidade continua isolada, com os próprios dados e o seu administrador, mas existe um cargo acima delas: o **dono da rede**.
+
+| Perfil | Vê | Pode fazer |
+|---|---|---|
+| Dono da rede | Todas as unidades da rede, cada uma separada | Criar unidades (até 5), cadastrar o administrador de cada uma, abrir qualquer unidade e gerenciá-la com os poderes de administrador |
+| Administrador | Só a própria unidade | Tudo dentro da unidade (alunos, planos, usuários…), sem ver as outras nem o dono |
+| Funcionário | Só a própria unidade | O dia a dia da unidade |
+
+- **Como criar uma rede:**
+  - *Cadastro novo:* na tela de cadastro, escolha **Rede de academias**, informe o nome da rede e o da primeira unidade. Quem se cadastra vira o dono.
+  - *Academia que já existe:* o administrador abre o menu da conta → **Transformar em rede**. A academia vira a primeira unidade, com todos os dados, e ele vira o dono.
+- **Painel da rede** (menu **Rede**, só para o dono): os totais da rede e um cartão por unidade, com alunos ativos, atrasadas, professores, usuários, recebido no mês (com barra para comparar as unidades), valor em aberto e os administradores. Dali o dono cria unidades (sempre com o administrador), cadastra mais administradores, renomeia e **abre** uma unidade.
+- **Abrir uma unidade** troca o sistema inteiro para ela: todas as telas passam a mostrar os dados dessa unidade. Uma faixa amarela no topo mostra em qual unidade o dono está, com o link *Trocar unidade*. Cada login do dono começa na unidade do cadastro dele.
+- **Isolamento:**
+  - o servidor confere a cada requisição se a unidade aberta é mesmo da rede do dono;
+  - administradores e funcionários nunca acessam o painel da rede (403), não veem o dono na lista de usuários e não podem criar alguém com perfil de dono;
+  - o dono de uma rede não enxerga nem altera unidades de outra rede (404).
+- **Onde está no código:** `model/Rede.java`, perfil `DONO` em `model/Perfil.java`, a unidade aberta fica na sessão (`Sessao.academiaAtiva`) e é aplicada em `security/TokenFilter.java`, regras em `service/RedeService.java`, rotas em `controller/RedeController.java`.
+- **Bancos antigos:** ao subir esta versão, a coluna de perfis passa a aceitar o dono (`config/DadosIniciais.java`). Backup do banco anterior: `backend/data/backup-antes-da-rede/`.
 
 > Console do banco: http://localhost:8080/h2-console — JDBC URL `jdbc:h2:file:./data/academia`, usuário `sa`, sem senha.
 
@@ -130,9 +154,11 @@ No primeiro acesso de cada usuário, um tour guiado passa pelas telas reais do s
 | Avaliações | `GET/POST /api/avaliacoes` (`?alunoId=`), `GET/PUT/DELETE /api/avaliacoes/{id}` |
 | Dashboard | `GET /api/dashboard` |
 | Login (público) | `POST /api/auth/login`, `POST /api/auth/cadastro` (nova academia) |
-| Sessão | `GET /api/auth/eu`, `POST /api/auth/logout`, `POST /api/auth/senha` |
-| Duas etapas | `POST /api/auth/login/2fa` (público: desafio + código), `GET /api/auth/2fa`, `POST /api/auth/2fa/iniciar`, `POST /api/auth/2fa/ativar`, `POST /api/auth/2fa/desativar`, `POST /api/usuarios/{id}/2fa/redefinir` (admin) |
+| Sessão e perfil | `GET /api/auth/eu`, `PUT /api/auth/eu` (próprio nome), `POST /api/auth/logout`, `POST /api/auth/senha`, `GET /api/auth/sessoes`, `DELETE /api/auth/sessoes/outras` |
+| Duas etapas | `POST /api/auth/login/2fa` (público: desafio + código), `GET /api/auth/2fa`, `POST /api/auth/2fa/iniciar`, `POST /api/auth/2fa/ativar`, `POST /api/auth/2fa/desativar`, `DELETE /api/auth/2fa/dispositivos/{id}` e `DELETE /api/auth/2fa/dispositivos` (esquecer dispositivos lembrados), `POST /api/usuarios/{id}/2fa/redefinir` (admin) |
 | Usuários (só admin) | `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}` |
+| Rede (só dono) | `GET /api/rede` (painel), `POST /api/rede/unidades` (unidade + administrador), `PUT /api/rede/unidades/{id}`, `POST /api/rede/unidades/{id}/admins`, `POST /api/rede/unidades/{id}/abrir` |
+| Rede (admin de academia avulsa) | `POST /api/rede/converter` (transforma a academia em rede e vira o dono) |
 
 Fora o login e o cadastro, toda chamada precisa do cabeçalho `Authorization: Bearer <token>`, com o token devolvido pelo login. Sem ele, a API responde 401; sem permissão para a ação, responde 403.
 

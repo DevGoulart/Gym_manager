@@ -21,8 +21,9 @@ public class AuthController {
 
     /** POST /api/auth/login/2fa {"desafio": "...", "codigo": "123456"} → segunda etapa do login. Público. */
     @PostMapping("/login/2fa")
-    public SessaoResponse loginComCodigo(@Valid @RequestBody CodigoLoginRequest req) {
-        return service.loginComCodigo(req);
+    public SessaoResponse loginComCodigo(@Valid @RequestBody CodigoLoginRequest req,
+                                         @RequestHeader(value = "User-Agent", required = false) String userAgent) {
+        return service.loginComCodigo(req, userAgent);
     }
 
     // ---------- Verificação em duas etapas da própria conta ----------
@@ -42,6 +43,20 @@ public class AuthController {
     @PostMapping("/2fa/ativar")
     public CodigosRecuperacao ativarDoisFatores(@Valid @RequestBody CodigoRequest req) {
         return doisFatores.ativar(req);
+    }
+
+    /** DELETE /api/auth/2fa/dispositivos/{id} → para de lembrar um navegador. */
+    @DeleteMapping("/2fa/dispositivos/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void esquecerDispositivo(@PathVariable Long id) {
+        doisFatores.esquecerDispositivo(id);
+    }
+
+    /** DELETE /api/auth/2fa/dispositivos → para de lembrar todos os navegadores. */
+    @DeleteMapping("/2fa/dispositivos")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void esquecerTodosDispositivos() {
+        doisFatores.esquecerTodosDispositivos();
     }
 
     @PostMapping("/2fa/desativar")
@@ -73,6 +88,24 @@ public class AuthController {
     @GetMapping("/eu")
     public EuResponse eu() {
         return service.eu();
+    }
+
+    /** PUT /api/auth/eu {"nome"} → a própria pessoa troca o nome. */
+    @PutMapping("/eu")
+    public UsuarioResponse atualizarPerfil(@Valid @RequestBody AtualizarPerfilRequest req) {
+        return service.atualizarPerfil(req);
+    }
+
+    /** GET /api/auth/sessoes → quantos navegadores estão logados nesta conta agora. */
+    @GetMapping("/sessoes")
+    public SessoesResponse sessoes() {
+        return service.sessoes();
+    }
+
+    /** DELETE /api/auth/sessoes/outras → encerra as sessões dos outros navegadores (esta continua). */
+    @DeleteMapping("/sessoes/outras")
+    public SessoesResponse encerrarOutrasSessoes() {
+        return service.encerrarOutrasSessoes();
     }
 
     @PostMapping("/senha")

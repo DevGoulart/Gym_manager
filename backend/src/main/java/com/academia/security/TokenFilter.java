@@ -1,5 +1,7 @@
 package com.academia.security;
 
+import com.academia.model.Academia;
+import com.academia.model.Perfil;
 import com.academia.model.Sessao;
 import com.academia.model.Usuario;
 import com.academia.repository.SessaoRepository;
@@ -14,7 +16,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Lê o cabeçalho "Authorization: Bearer <token>", procura a sessão pelo hash do token
@@ -36,17 +40,33 @@ public class TokenFilter extends OncePerRequestFilter {
             String token = cabecalho.substring(7).trim();
             sessaoRepository.findById(Tokens.hash(token))
                     .filter(s -> s.getExpiraEm().isAfter(LocalDateTime.now()))
-                    .map(Sessao::getUsuario)
-                    .filter(u -> u.isAtivo() && u.getAcademia().isAtiva())
+                    .filter(s -> s.getUsuario().isAtivo() && s.getUsuario().getAcademia().isAtiva())
                     .ifPresent(this::autenticar);
         }
         chain.doFilter(request, response);
     }
 
-    private void autenticar(Usuario u) {
-        UsuarioLogado logado = UsuarioLogado.de(u);
-        var autoridades = List.of(new SimpleGrantedAuthority("ROLE_" + u.getPerfil().name()));
+    private void autenticar(Sessao s) {
+        Usuario u = s.getUsuario();
+        UsuarioLogado logado = UsuarioLogado.de(u, academiaEmUso(s), s.getTokenHash());
+        var autoridades = new ArrayList<SimpleGrantedAuthority>(List.of(new SimpleGrantedAuthority("ROLE_" + u.getPerfil().name())));
+        // Dentro da unidade aberta, o dono tem os mesmos poderes de um administrador
+        if (u.getPerfil() == Perfil.DONO) autoridades.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         var auth = new UsernamePasswordAuthenticationToken(logado, null, autoridades);
         SecurityContextHolder.getContext().setAuthentication(auth);
+    }
+
+    /**
+     * A academia em que a pessoa age: a do cadastro dela. Só o dono de uma rede pode estar em outra,
+     * e só se for uma unidade ativa da própria rede (conferido a cada requisição).
+     */
+    static Academia academiaEmUso(Sessao s) {
+        Usuario u = s.getUsuario();
+        Academia casa = u.getAcademia();
+        Academia aberta = s.getAcademiaAtiva();
+        if (u.getPerfil() != Perfil.DONO || aberta == null || !aberta.isAtiva()) return casa;
+        boolean mesmaRede = casa.getRede() != null && aberta.getRede() != null
+                && Objects.equals(casa.getRede().getId(), aberta.getRede().getId());
+        return mesmaRede ? aberta : casa;
     }
 }

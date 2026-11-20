@@ -14,4 +14,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     List<Usuario> findByAcademiaIdOrderByNomeAsc(Long academiaId);
     Optional<Usuario> findByIdAndAcademiaId(Long id, Long academiaId);
     long countByAcademiaIdAndPerfilAndAtivoTrue(Long academiaId, Perfil perfil);
+    long countByAcademiaIdAndPerfilNot(Long academiaId, Perfil perfil);
+    List<Usuario> findByAcademiaIdAndPerfilOrderByNomeAsc(Long academiaId, Perfil perfil);
+    // A gestão de usuários de uma unidade nunca mostra nem altera o dono da rede
+    List<Usuario> findByAcademiaIdAndPerfilNotOrderByNomeAsc(Long academiaId, Perfil perfil);
+    Optional<Usuario> findByIdAndAcademiaIdAndPerfilNot(Long id, Long academiaId, Perfil perfil);
 }

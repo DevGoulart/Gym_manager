@@ -36,6 +36,11 @@
         : { rota: 'dashboard', alvo: '#menu', titulo: 'Os módulos do sistema',
             texto: 'Cada parte da academia tem a sua tela: <b>alunos, planos, mensalidades, professores, treinos e avaliações</b>. Clique para trocar.' },
     ];
+    // Dono da rede (plano Rede): o painel com todas as unidades
+    if (ctx.dono) passos.push({
+      rota: 'rede', alvo: '.unidades-grade', titulo: 'Sua rede',
+      texto: `Aqui você vê <b>todas as unidades${ctx.rede ? ` da ${ctx.rede}` : ''}</b>, cada uma com os seus números. Crie unidades, cadastre o administrador de cada uma e use <b>Abrir unidade</b> para gerenciá-la. A faixa amarela no topo mostra em qual unidade você está.`,
+    });
     if (ctx.comecando) passos.push({
       rota: 'dashboard', alvo: '.primeiros-passos', titulo: 'Comece por aqui',
       texto: 'Como a academia é nova, siga esta lista: <b>crie os planos</b>, cadastre os professores e matricule os alunos. Ela some quando você começar.',
@@ -61,7 +66,7 @@
       { rota: 'avaliacoes', alvo: '#fAluno', titulo: 'Evolução em gráficos',
         texto: 'Escolha um aluno aqui para ver a evolução de <b>peso, IMC, gordura e cintura</b>, comparando cada avaliação com a anterior.' },
       { rota: 'dashboard', alvo: '#botaoUsuario', titulo: 'Sua conta',
-        texto: `Troque sua senha, ative a verificação em duas etapas${ctx.admin ? ', gerencie os usuários da academia' : ''} e <b>reveja este tutorial</b> quando quiser.` },
+        texto: `Em <b>Meu perfil</b>: seus dados, a senha, a verificação em duas etapas e as sessões abertas${ctx.admin ? '. Aqui também ficam os usuários da academia' : ''}. E dá para <b>rever este tutorial</b> quando quiser.` },
       { rota: null, alvo: null, titulo: 'Tudo pronto!',
         texto: ctx.comecando
           ? 'Agora é com você. Comece criando os <b>planos</b> da academia na lista de primeiros passos. Bons treinos!'

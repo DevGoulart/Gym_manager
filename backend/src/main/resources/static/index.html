@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600;1,700;1,800;1,900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=7">
+  <link rel="stylesheet" href="/css/style.css?v=12">
 </head>
 <body class="verificando">
   <!-- ===================== TELA DE LOGIN / CADASTRO DE ACADEMIA ===================== -->
@@ -65,6 +65,11 @@
         <form id="formDoisFatores" class="form-acesso" novalidate hidden aria-labelledby="tituloDoisFatores">
           <h2 id="tituloDoisFatores">Verificação em <span>duas etapas</span></h2>
           <p class="sub-acesso" id="textoDoisFatores">Abra o aplicativo autenticador no celular e digite o código de 6 dígitos da sua conta.</p>
+          <!-- Fica antes do código: o código envia sozinho ao completar 6 dígitos -->
+          <label class="check lembrar-2fa" id="lembrar2faBloco">
+            <input type="checkbox" id="lembrar2fa" name="lembrar">
+            <span><b>Lembrar deste dispositivo por 30 dias</b><small>Neste navegador, o login pede só a senha. Não marque em computadores compartilhados.</small></span>
+          </label>
           <div class="campo" data-campo="codigo">
             <label class="rotulo" for="codigo2fa" id="rotuloCodigo2fa">Código do aplicativo</label>
             <input id="codigo2fa" name="codigo" class="codigo-otp" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
@@ -78,10 +83,22 @@
 
         <form id="formCadastro" class="form-acesso" role="tabpanel" aria-labelledby="abaCadastro" novalidate hidden>
           <h2>Cadastre sua <span>academia</span></h2>
-          <p class="sub-acesso">Em um minuto: você vira o administrador e já começa a usar.</p>
+          <p class="sub-acesso" id="cadSub">Em um minuto: você vira o administrador e já começa a usar.</p>
           <div class="campos">
+            <div class="campo full" data-campo="tipo">
+              <span class="rotulo" id="r_tipoConta">Tipo de conta</span>
+              <div class="cartoes" role="radiogroup" aria-labelledby="r_tipoConta">
+                <label class="cartao"><input type="radio" name="tipo" value="ACADEMIA" checked><span class="cartao-corpo"><b>Uma academia</b><small>Você vira o administrador</small></span></label>
+                <label class="cartao"><input type="radio" name="tipo" value="REDE"><span class="cartao-corpo"><b>Rede de academias</b><small>Plano Rede: até 5 unidades e você vê todas</small></span></label>
+              </div>
+            </div>
+            <div class="campo full" data-campo="nomeRede" hidden>
+              <label class="rotulo" for="cadRede">Nome da rede <span class="obrig">*</span></label>
+              <input id="cadRede" name="nomeRede" autocomplete="organization" placeholder="Ex.: Rede Corpo em Forma" maxlength="120">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
             <div class="campo full" data-campo="nomeAcademia">
-              <label class="rotulo" for="cadAcademia">Nome da academia <span class="obrig">*</span></label>
+              <label class="rotulo" for="cadAcademia"><span id="rotuloCadAcademia">Nome da academia</span> <span class="obrig">*</span></label>
               <input id="cadAcademia" name="nomeAcademia" autocomplete="organization" placeholder="Ex.: Academia Corpo em Forma" maxlength="120">
               <small class="erro-campo" role="alert" hidden></small>
             </div>
@@ -112,7 +129,7 @@
             </div>
           </div>
           <p class="erro-form" data-erro-geral hidden></p>
-          <button type="submit" class="primario largo">Criar academia e entrar</button>
+          <button type="submit" class="primario largo" id="cadBotao">Criar academia e entrar</button>
           <p class="troca-aba">Já tem conta? <button type="button" class="link" data-aba="entrar">Entrar</button></p>
         </form>
       </div>
@@ -128,6 +145,7 @@
     </a>
 
     <nav id="menu" aria-label="Módulos">
+      <a href="#/rede" data-mod="rede" data-dono>Rede</a>
       <a href="#/dashboard" data-mod="dashboard">Início</a>
       <a href="#/alunos" data-mod="alunos">Alunos</a>
       <a href="#/planos" data-mod="planos">Planos</a>
@@ -153,10 +171,11 @@
           <small id="menuEmail"></small>
           <span class="badge" id="menuPerfil"></span>
         </div>
+        <a href="#/perfil" role="menuitem">Meu perfil</a>
+        <a href="#/rede" role="menuitem" data-dono>Painel da rede</a>
         <a href="#/usuarios" role="menuitem" data-admin>Usuários da academia</a>
-        <button type="button" role="menuitem" data-acao="doisFatores">Verificação em duas etapas <span class="badge" id="menuDoisFatores"></span></button>
+        <button type="button" role="menuitem" data-acao="converterRede" data-avulsa>Transformar em rede</button>
         <button type="button" role="menuitem" data-acao="tutorial">Tutorial do sistema</button>
-        <button type="button" role="menuitem" data-acao="alterarSenha">Alterar minha senha</button>
         <button type="button" role="menuitem" class="sair" data-acao="sair">Sair</button>
       </div>
     </div>
@@ -165,6 +184,9 @@
       <span></span><span></span><span></span>
     </button>
   </header>
+
+  <!-- Dono da rede: em qual unidade ele está agindo agora -->
+  <div class="barra-unidade" id="barraUnidade" data-dono role="status"></div>
 
   <section class="hero" aria-labelledby="titulo">
     <svg class="tri tri-1" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
@@ -207,6 +229,6 @@
 
   <script src="/js/ticker.js"></script>
   <script src="/js/tutorial.js"></script>
-  <script src="/js/app.js?v=7"></script>
+  <script src="/js/app.js?v=10"></script>
 </body>
 </html>

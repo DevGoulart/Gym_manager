@@ -28,9 +28,14 @@ public class AcademiaAtual {
         throw new NaoAutenticadoException("Faça login para continuar.");
     }
 
-    /** Id da academia do usuário logado. */
+    /** Id da academia em que o usuário logado está agindo (para o dono de uma rede, a unidade aberta). */
     public Long id() {
         return usuario().academiaId();
+    }
+
+    /** Rede do usuário logado, ou null se a academia dele não faz parte de uma rede. */
+    public Long redeId() {
+        return usuario().redeId();
     }
 
     /** Referência à academia para gravar em novos registros (sem consultar o banco). */

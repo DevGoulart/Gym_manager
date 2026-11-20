@@ -26,6 +26,11 @@ public class Sessao {
     @Column(nullable = false)
     private LocalDateTime expiraEm;
 
+    /** Para o dono de uma rede: a unidade que ele está vendo nesta sessão (vazio = a unidade do cadastro dele). */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "academia_ativa_id")
+    private Academia academiaAtiva;
+
     public Sessao() {
     }
 
@@ -40,4 +45,6 @@ public class Sessao {
     public Usuario getUsuario() { return usuario; }
     public LocalDateTime getCriadaEm() { return criadaEm; }
     public LocalDateTime getExpiraEm() { return expiraEm; }
+    public Academia getAcademiaAtiva() { return academiaAtiva; }
+    public void setAcademiaAtiva(Academia academiaAtiva) { this.academiaAtiva = academiaAtiva; }
 }
