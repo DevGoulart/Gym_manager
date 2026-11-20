@@ -174,6 +174,16 @@
     itens.forEach((d) => d.addEventListener('toggle', () => { if (d.open) itens.forEach((o) => { if (o !== d) o.open = false; }); }));
   }
 
-  function iniciar() { iniciarAbas(); iniciarSimulador(); iniciarCobranca(); iniciarPerguntas(); }
+  /* ---------------- Quem já entrou no sistema vê "Abrir o sistema" ---------------- */
+  function iniciarAcesso() {
+    let logado = false;
+    try { logado = !!localStorage.getItem('forcatotal.token'); } catch { /* sem armazenamento: mantém "Entrar" */ }
+    if (!logado) return;
+    const entrar = $('#linkEntrar'), jaTenho = $('#linkJaTenho');
+    if (entrar) entrar.textContent = 'Abrir o sistema';
+    if (jaTenho) jaTenho.textContent = 'Abrir o sistema';
+  }
+
+  function iniciar() { iniciarAbas(); iniciarSimulador(); iniciarCobranca(); iniciarPerguntas(); iniciarAcesso(); }
   if (document.readyState !== 'loading') iniciar(); else document.addEventListener('DOMContentLoaded', iniciar);
 })();

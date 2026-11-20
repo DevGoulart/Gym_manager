@@ -29,13 +29,13 @@ GymApp/
 1. Abra a pasta **`backend`** no **IntelliJ IDEA** (*File → Open*, selecione a pasta; ele reconhece o `pom.xml`).
 2. Use o **JDK 21** (*File → Project Structure → SDK*).
 3. Execute a classe **`AcademiaApplication`** (botão ▶ verde).
-4. Acesse **http://localhost:8080** no navegador e entre com um dos logins abaixo.
+4. Acesse **http://localhost:8080**: abre a página que apresenta o produto. Para usar o sistema, clique em **Entrar** (ou acesse direto **http://localhost:8080/app**) e entre com um dos logins abaixo.
 
 O banco H2 fica salvo em `backend/data/`. Na primeira execução (banco vazio), o sistema cria a academia padrão com dados de exemplo de todos os módulos.
 
 ## Página de apresentação do produto
 
-Em **http://localhost:8080/apresentacao** há uma página pública de venda do produto: os 6 módulos, benefícios, simulador, planos de assinatura e perguntas frequentes, com botões para entrar ou cadastrar uma academia.
+A **entrada padrão do site** (**http://localhost:8080/**) é a página pública de venda do produto: os 6 módulos, benefícios, simulador, planos de assinatura e perguntas frequentes, com botões para entrar ou cadastrar uma academia.
 
 - **Telas do sistema:** no topo, uma pilha 3D com prints reais das telas internas (`static/img/telas/`), em `static/js/card-swap.js`, adaptado do componente CardSwap nas cores do site. Os cartões trocam sozinhos a cada 3,8 s; dá para arrastar o da frente, clicar num do fundo ou usar as setas do teclado. A troca pausa com o mouse em cima, com o foco do teclado ou com a aba em segundo plano.
 - **Atualizar os prints:** se alguma tela mudar, rode, com o servidor ligado e a partir da pasta do projeto:
@@ -53,7 +53,7 @@ Em **http://localhost:8080/apresentacao** há uma página pública de venda do p
 
 - **Animações:** os elementos aparecem conforme a rolagem, no modelo da biblioteca AOS (*Animate On Scroll*). Elas usam os mesmos atributos `data-aos`, `data-aos-delay` e `data-aos-duration`, mas com um script próprio e sem dependências (`static/js/aos.js`). Assim a página funciona mesmo sem internet.
 - **Acessibilidade:** quem configurou o sistema para reduzir movimento vê a página sem animações. Sem JavaScript, todo o conteúdo continua visível.
-- **Arquivos:** `static/apresentacao.html`, `static/css/apresentacao.css`, `static/js/apresentacao.js` (abas, simulador e cobrança), `static/js/card-swap.js`, `static/js/scroll-float.js`, `static/js/scroll-expand.js`, `static/js/aos.js` e as imagens em `static/img/telas/`. A rota `/apresentacao` está em `config/PaginasConfig.java`.
+- **Arquivos:** `static/apresentacao.html`, `static/css/apresentacao.css`, `static/js/apresentacao.js` (abas, simulador e cobrança), `static/js/card-swap.js`, `static/js/scroll-float.js`, `static/js/scroll-expand.js`, `static/js/aos.js` e as imagens em `static/img/telas/`. As rotas ficam em `config/PaginasConfig.java`: `/` mostra esta página, `/app` abre o sistema e o endereço antigo `/apresentacao` redireciona para `/`.
 
 ## Login e várias academias
 
@@ -138,20 +138,11 @@ Fora o login e o cadastro, toda chamada precisa do cabeçalho `Authorization: Be
 
 Erros são devolvidos como `{"erro": "mensagem"}` e aparecem para o usuário no site.
 
-## Roteiro sugerido para a apresentação
-
-1. **Início:** mostrar os indicadores e receber uma mensalidade atrasada pelo botão *Receber*.
-2. **Planos:** criar um plano (ex.: Semestral, R$ 89,90, 6 meses).
-3. **Alunos:** cadastrar um aluno nesse plano, buscar pelo nome, abrir a *Ficha*.
-4. **Mensalidades:** *Gerar mensalidades* (3 meses) para o aluno, registrar um pagamento e estornar.
-5. **Professores:** cadastrar um professor.
-6. **Treinos:** criar uma ficha para o aluno com 3 exercícios.
-7. **Avaliações:** lançar duas avaliações com datas diferentes e mostrar os gráficos de evolução.
-8. **Exclusão:** excluir o aluno (remove junto mensalidades, treinos e avaliações) e mostrar o bloqueio ao excluir um plano com alunos.
-
 ## Tecnologias
 
 Java 21 · Spring Boot 3.5 (Web, Data JPA, Validation, Security) · H2 Database · Maven · HTML5, CSS3 e JavaScript (Fetch API), sem bibliotecas externas · IntelliJ IDEA
 
 
-& "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.11-bin\6mqf5t809d9geo83kj4ttckcbc\apache-maven-3.9.11\bin\mvn.cmd" spring-boot:run
+# INICIALIZAÇÃO:
+
+| & "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.11-bin\6mqf5t809d9geo83kj4ttckcbc\apache-maven-3.9.11\bin\mvn.cmd" spring-boot:run

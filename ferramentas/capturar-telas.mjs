@@ -98,7 +98,7 @@ try {
   // Sem animações: a foto sai com tudo no lugar
   await cdp('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
   await cdp('Emulation.setDeviceMetricsOverride', { width: LARGURA, height: ALTURA, deviceScaleFactor: 1, mobile: false });
-  await cdp('Page.navigate', { url: BASE + '/' });
+  await cdp('Page.navigate', { url: BASE + '/app' });
   await espera(1200);
   await avaliar(`localStorage.setItem('forcatotal.token', ${JSON.stringify(token)})`);
 
@@ -106,7 +106,7 @@ try {
   for (const tela of TELAS) {
     await cdp('Emulation.setDeviceMetricsOverride', { width: tela.largura || LARGURA, height: tela.altura || ALTURA,
       deviceScaleFactor: tela.dpr || 1, mobile: !!tela.celular });
-    await cdp('Page.navigate', { url: `${BASE}/?p=${Date.now()}#/${tela.rota}` });
+    await cdp('Page.navigate', { url: `${BASE}/app?p=${Date.now()}#/${tela.rota}` });
     await espera(2200);
     if (tela.rolar) {
       await avaliar(`(() => { const el = document.querySelector(${JSON.stringify(tela.rolar)});
@@ -119,7 +119,7 @@ try {
     pastasSaida.forEach((p) => writeFileSync(join(p, tela.arquivo), imagem));
     console.log(`ok  #/${tela.rota}  →  img/telas/${tela.arquivo}  (${Math.round(imagem.length / 1024)} KB)`);
   }
-  console.log('\nPrints atualizados. Recarregue /apresentacao para ver.');
+  console.log('\nPrints atualizados. Recarregue a página inicial (/) para ver.');
 } catch (erro) {
   console.error('Erro:', erro.message);
   process.exitCode = 1;
