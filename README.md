@@ -145,4 +145,4 @@ Java 21 · Spring Boot 3.5 (Web, Data JPA, Validation, Security) · H2 Database 
 
 # INICIALIZAÇÃO:
 
-| & "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.11-bin\6mqf5t809d9geo83kj4ttckcbc\apache-maven-3.9.11\bin\mvn.cmd" spring-boot:run
+| & "$env:USERPROFILE\.m2\wrapper\dists\apache-maven-3.9.11-bin\6mqf5t809d9geo83kj4ttckcbc\apache-maven-3.9.11\bin\mvn.cmd" spring-boot:run |

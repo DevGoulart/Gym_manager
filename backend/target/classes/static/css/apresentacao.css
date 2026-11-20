@@ -380,13 +380,20 @@ svg.grafico-desenho { width: 100%; height: auto; overflow: visible; }
 
 /* ---------- Planos (PixelCard no tema do site) ---------- */
 .ap-cabecalho.centro { margin-left: auto; margin-right: auto; text-align: center; }
-.cobranca { position: relative; display: inline-grid; grid-template-columns: 1fr 1fr; margin-top: 28px; padding: 4px; border: 1px solid var(--linha-forte); border-radius: 999px; background: #000; }
-.cobranca button { position: relative; z-index: 1; gap: 8px; padding: 10px 22px; border: 0; border-radius: 999px; background: transparent; color: var(--texto-2); transition: color .25s; }
+/* Medidas inteiras (48 px de altura, marcador de 38 px, 4 px de folga em todos os lados):
+   o marcador fica exatamente concêntrico ao contorno em qualquer tela, sem arredondamento de meio pixel */
+.cobranca {
+  --cob-folga: 4px; --cob-alt: 38px;
+  position: relative; box-sizing: border-box; display: inline-grid; grid-template-columns: 1fr 1fr; align-items: stretch;
+  width: 440px; max-width: 100%; height: calc(var(--cob-alt) + var(--cob-folga) * 2 + 2px); margin-top: 28px;
+  padding: var(--cob-folga); border: 1px solid var(--linha-forte); border-radius: 999px; background: #000;
+}
+.cobranca button { position: relative; z-index: 1; gap: 8px; height: var(--cob-alt); min-width: 0; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: var(--texto-2); transition: color .25s; }
 .cobranca button:hover { background: transparent; color: #fff; }
 .cobranca button[aria-checked="true"] { color: #fff; }
 .cobranca em { font-style: normal; padding: 2px 8px; border-radius: 999px; background: var(--vermelho-fundo); color: #ff6b6b; font-size: 10px; letter-spacing: .04em; }
 .cobranca button[aria-checked="true"] em { background: rgba(0, 0, 0, .35); color: #fff; }
-.cobranca-marcador { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 999px; background: var(--vermelho); box-shadow: 0 0 22px rgba(211, 0, 0, .45); transition: transform .35s cubic-bezier(.5, 1.4, .5, 1); }
+.cobranca-marcador { position: absolute; top: var(--cob-folga); left: var(--cob-folga); height: var(--cob-alt); width: calc((100% - var(--cob-folga) * 2) / 2); border-radius: 999px; background: var(--vermelho); box-shadow: 0 0 22px rgba(211, 0, 0, .45); transition: transform .35s cubic-bezier(.5, 1.4, .5, 1); }
 .cobranca[data-modo="anual"] .cobranca-marcador { transform: translateX(100%); }
 
 .precos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; align-items: stretch; }
@@ -434,9 +441,17 @@ svg.grafico-desenho { width: 100%; height: auto; overflow: visible; }
   font-family: var(--f-titulo); font-size: 22px; font-weight: 700; font-style: italic; text-transform: uppercase;
 }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: "+"; flex: none; display: grid; place-items: center; width: 32px; height: 32px; border: 2px solid var(--vermelho); border-radius: 50%; font-style: normal; font-size: 22px; color: var(--vermelho); transition: transform .3s, background .2s, color .2s; }
-.faq summary:hover::after { background: var(--vermelho); color: #fff; }
-.faq details[open] summary::after { transform: rotate(45deg); background: var(--vermelho); color: #fff; }
+/* "+" desenhado com duas barras (e não com o caractere da fonte), para ficar exatamente no centro do círculo */
+.faq summary::after {
+  --mais: var(--vermelho);
+  content: ""; flex: none; box-sizing: border-box; width: 32px; height: 32px; border: 2px solid var(--vermelho); border-radius: 50%;
+  background:
+    linear-gradient(var(--mais), var(--mais)) center / 12px 2px no-repeat,
+    linear-gradient(var(--mais), var(--mais)) center / 2px 12px no-repeat;
+  transition: transform .3s, background-color .2s;
+}
+.faq summary:hover::after, .faq details[open] summary::after { --mais: #fff; background-color: var(--vermelho); }
+.faq details[open] summary::after { transform: rotate(45deg); }
 .faq summary:focus-visible { outline: 2px solid var(--vermelho); outline-offset: -2px; }
 .faq details p { margin: 0; padding: 0 22px 22px; color: var(--texto-2); font-size: 15px; }
 .faq details[open] p { animation: painel-entra .35s ease-out; }
@@ -490,7 +505,9 @@ svg.grafico-desenho { width: 100%; height: auto; overflow: visible; }
   .ficha-mock > div { grid-template-columns: 28px 1fr; }
   .ficha-mock > div em { grid-column: 2; }
   .sim-controles, .sim-resultado { padding: 28px 18px; }
-  .cobranca button { padding: 10px 14px; }
+  .cobranca { width: 100%; }
+  .cobranca button { padding: 0 8px; gap: 6px; font-size: 11px; letter-spacing: .04em; }
+  .cobranca em { padding: 2px 6px; font-size: 9px; letter-spacing: 0; }
   .plano-conteudo { padding: 58px 22px 24px; }
   .plano-fita, .plano-selo { left: 22px; top: 20px; }
   .plano-fita ~ .plano-selo { left: 22px; right: auto; top: 52px; }
