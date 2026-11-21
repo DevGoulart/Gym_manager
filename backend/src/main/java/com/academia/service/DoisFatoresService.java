@@ -112,6 +112,18 @@ public class DoisFatoresService {
     }
 
     /**
+     * Para ações sem volta (excluir a conta ou uma unidade): confere a senha e, se a verificação
+     * em duas etapas estiver ativa, também o código. Um código de recuperação usado aqui só é
+     * gasto de vez se a ação inteira der certo (a transação de quem chama desfaz em caso de erro).
+     */
+    public void confirmarIdentidade(Usuario u, String senha, String codigo) {
+        if (senha == null || !passwordEncoder.matches(senha, u.getSenhaHash())) throw new RegraNegocioException("Senha incorreta.");
+        if (!u.doisFatoresAtivo()) return;
+        if (codigo == null || codigo.isBlank()) throw new RegraNegocioException("Informe o código do aplicativo.");
+        if (!verificarSegundoFator(u, codigo)) throw new RegraNegocioException("Código incorreto.");
+    }
+
+    /**
      * Confere o código do aplicativo ou, se não for um, um código de recuperação (que é gasto).
      * Quem chama grava o usuário depois, para guardar o último intervalo usado.
      */

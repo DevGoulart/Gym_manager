@@ -937,3 +937,31 @@ body.nao-logado .barra-unidade { display: none !important; }
   .perfil-form > button, .perfil-cartao > button { width: 100%; }
   .perfil-form.vertical > button { align-self: stretch; }
 }
+
+/* ---------------------------------------------------------------------
+ * Sons dos cliques (js/sons.js): chave no menu do usuário
+ * ------------------------------------------------------------------- */
+.chave-mini { position: relative; flex: none; margin-left: auto; width: 30px; height: 16px; border-radius: 999px; background: var(--linha-forte); transition: background .2s; }
+.chave-mini::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #fff; transition: transform .2s; }
+[aria-checked="true"] > .chave-mini { background: var(--vermelho); }
+[aria-checked="true"] > .chave-mini::after { transform: translateX(14px); }
+@media (prefers-reduced-motion: reduce) { .chave-mini, .chave-mini::after { transition: none; } }
+
+/* ---------------------------------------------------------------------
+ * Meu perfil: excluir a conta (botão de segurar em css/hold-button.css)
+ * ------------------------------------------------------------------- */
+.perfil-excluir { border-color: rgba(211, 0, 0, .45); background: linear-gradient(180deg, rgba(211, 0, 0, .06), transparent 120px), var(--painel); }
+.perfil-excluir-detalhes form { max-width: 520px; }
+.excluir-texto { margin: 2px 0 8px; padding: 8px 12px; width: fit-content; max-width: 100%; border: 1px dashed rgba(211, 0, 0, .55); border-radius: var(--raio); font-family: var(--f-titulo); font-size: 18px; font-weight: 700; letter-spacing: .04em; color: #fff; overflow-wrap: anywhere; }
+.perfil-excluir .campo.confere input { border-color: #2fbf71; }
+.excluir-acao { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 4px; }
+.excluir-acao .dica { margin: 0; }
+@media (max-width: 720px) {
+  .excluir-acao .hold-button { width: 100%; }
+}
+
+/* Excluir unidade (modal do painel da rede): mesmo formulário da exclusão da conta */
+.excluir-modal { display: flex; flex-direction: column; gap: 16px; }
+.excluir-modal .perfil-status { margin: 0; }
+.excluir-modal .perfil-form { gap: 12px; }
+@media (max-width: 720px) { .excluir-modal .hold-button { width: 100%; } }

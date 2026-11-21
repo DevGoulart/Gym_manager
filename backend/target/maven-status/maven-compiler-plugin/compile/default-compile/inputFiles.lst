@@ -75,10 +75,12 @@ C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\Ava
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\DashboardService.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\DispositivosConfiaveis.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\DoisFatoresService.java
+C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\ExclusaoContaService.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\MensalidadeService.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\PlanoService.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\ProfessorService.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\RedeService.java
+C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\RemocaoDeAcademias.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\Textos.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\TreinoService.java
 C:\Users\Noronha\Documents\GymApp\backend\src\main\java\com\academia\service\UsuarioService.java

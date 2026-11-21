@@ -52,6 +52,19 @@ public class RedeController {
     }
 
     /** POST /api/rede/converter {"nomeRede"} → transforma a academia avulsa em rede; o administrador vira o dono. */
+    /** O que a exclusão da unidade vai apagar e o texto de confirmação. */
+    @GetMapping("/unidades/{id}/exclusao")
+    public ExclusaoUnidadeInfo exclusaoUnidade(@PathVariable Long id) {
+        return service.infoExclusao(id);
+    }
+
+    /** Exclui a unidade inteira (senha, código das duas etapas e o nome da unidade digitado). */
+    @PostMapping("/unidades/{id}/excluir")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirUnidade(@PathVariable Long id, @Valid @RequestBody ExcluirUnidadeRequest req) {
+        service.excluirUnidade(id, req);
+    }
+
     @PostMapping("/converter")
     public EuResponse converter(@Valid @RequestBody ConverterRedeRequest req) {
         return service.converter(req);

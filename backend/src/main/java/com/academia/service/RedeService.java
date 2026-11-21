@@ -11,6 +11,7 @@ import com.academia.exception.RecursoNaoEncontradoException;
 import com.academia.exception.RegraNegocioException;
 import com.academia.model.*;
 import com.academia.repository.AcademiaRepository;
+import com.academia.repository.AlunoRepository;
 import com.academia.repository.RedeRepository;
 import com.academia.repository.SessaoRepository;
 import com.academia.repository.UsuarioRepository;
@@ -39,10 +40,17 @@ public class RedeService {
     private final DashboardService dashboardService;
     private final PasswordEncoder passwordEncoder;
     private final AcademiaAtual academiaAtual;
+    private final AlunoRepository alunoRepository;
+    private final DoisFatoresService doisFatores;
+    private final RemocaoDeAcademias remocao;
 
     public RedeService(RedeRepository redeRepository, AcademiaRepository academiaRepository,
                        UsuarioRepository usuarioRepository, SessaoRepository sessaoRepository,
-                       DashboardService dashboardService, PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual) {
+                       DashboardService dashboardService, PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual,
+                       AlunoRepository alunoRepository, DoisFatoresService doisFatores, RemocaoDeAcademias remocao) {
+        this.alunoRepository = alunoRepository;
+        this.doisFatores = doisFatores;
+        this.remocao = remocao;
         this.redeRepository = redeRepository;
         this.academiaRepository = academiaRepository;
         this.usuarioRepository = usuarioRepository;
@@ -150,6 +158,52 @@ public class RedeService {
         s.setAcademiaAtiva(a);
         sessaoRepository.save(s);
         return new EuResponse(UsuarioResponse.de(s.getUsuario()), AcademiaResponse.de(a), RedeResponse.de(rede));
+    }
+
+    /**
+     * Unidade que o dono pode excluir. A unidade principal (onde está a conta do dono) não pode:
+     * para apagar tudo, o caminho é excluir a conta em "Meu perfil", que leva a rede inteira.
+     */
+    private Academia unidadeExcluivel(Long id, Rede rede, Usuario dono) {
+        Academia a = unidade(id, rede);
+        if (a.getId().equals(dono.getAcademia().getId())) {
+            throw new RegraNegocioException("A sua unidade principal não pode ser excluída. Para apagar a rede inteira, exclua a sua conta em Meu perfil.");
+        }
+        return a;
+    }
+
+    private Usuario donoLogado() {
+        return usuarioRepository.findById(academiaAtual.usuario().id())
+                .orElseThrow(() -> new NaoAutenticadoException("Faça login para continuar."));
+    }
+
+    /** Prévia da exclusão de uma unidade: o que some e o texto a digitar (o nome da unidade). */
+    @Transactional(readOnly = true)
+    public ExclusaoUnidadeInfo infoExclusao(Long id) {
+        Rede rede = redeDoDono();
+        Usuario dono = donoLogado();
+        Academia a = unidadeExcluivel(id, rede, dono);
+        return new ExclusaoUnidadeInfo(a.getId(), a.getNome(), alunoRepository.countByAcademiaId(a.getId()),
+                usuarioRepository.findByAcademiaIdOrderByNomeAsc(a.getId()).size(), dono.doisFatoresAtivo(),
+                a.getId().equals(academiaAtual.usuario().academiaId()));
+    }
+
+    /**
+     * Exclui a unidade com tudo o que há nela: alunos, mensalidades, treinos, avaliações, professores,
+     * planos e os usuários (administradores e funcionários perdem o acesso na hora). Mesmo sistema da
+     * exclusão da conta: senha, código das duas etapas (se ativa) e o nome da unidade digitado.
+     * Se o dono estava com ela aberta, volta para a unidade principal.
+     */
+    @Transactional
+    public void excluirUnidade(Long id, ExcluirUnidadeRequest req) {
+        Rede rede = redeDoDono();
+        Usuario dono = donoLogado();
+        Academia a = unidadeExcluivel(id, rede, dono);
+        doisFatores.confirmarIdentidade(dono, req.senha(), req.codigo());
+        if (!ExclusaoContaService.confere(req.confirmacao(), a.getNome())) {
+            throw new RegraNegocioException("Confirmação incorreta: digite o nome da unidade, como aparece no aviso.");
+        }
+        remocao.apagar(List.of(a));
     }
 
     /**

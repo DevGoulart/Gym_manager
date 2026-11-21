@@ -22,6 +22,12 @@ public interface SessaoRepository extends JpaRepository<Sessao, String> {
 
     long countByUsuarioIdAndExpiraEmAfter(Long usuarioId, LocalDateTime agora);
 
+    /** Unidade que vai ser apagada: sessões do dono que estavam com ela aberta voltam para a unidade dele. */
+    @Modifying
+    @Transactional
+    @Query("update Sessao s set s.academiaAtiva = null where s.academiaAtiva.id = :academiaId")
+    int fecharUnidadeAberta(Long academiaId);
+
     /** Encerra as sessões da pessoa em outros navegadores, mantendo a atual. */
     @Modifying
     @Transactional

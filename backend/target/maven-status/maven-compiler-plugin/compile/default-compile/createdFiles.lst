@@ -16,6 +16,7 @@ com\academia\controller\DashboardController.class
 com\academia\dto\TreinoResponse.class
 com\academia\model\Aluno.class
 com\academia\model\Professor.class
+com\academia\service\ExclusaoContaService.class
 com\academia\exception\NaoAutenticadoException.class
 com\academia\security\LimiteTentativas.class
 com\academia\config\CorsConfig.class
@@ -30,6 +31,7 @@ com\academia\model\StatusMensalidade.class
 com\academia\model\FichaTreino.class
 com\academia\exception\MuitasTentativasException.class
 com\academia\config\DadosIniciais.class
+com\academia\service\RemocaoDeAcademias.class
 com\academia\model\Sessao.class
 com\academia\controller\UsuarioController.class
 com\academia\dto\AuthDtos.class
@@ -41,15 +43,20 @@ com\academia\dto\AuthDtos$EuResponse.class
 com\academia\service\UsuarioService.class
 com\academia\dto\AuthDtos$CodigosRecuperacao.class
 com\academia\dto\AuthDtos$CodigoRequest.class
+com\academia\service\ExclusaoContaService$Escopo.class
 com\academia\service\AvaliacaoService.class
+com\academia\dto\AuthDtos$ExclusaoContaInfo.class
 com\academia\dto\AlunoRequest.class
 com\academia\dto\PlanoRequest.class
 com\academia\security\DesafiosDoisFatores.class
+com\academia\service\ExclusaoContaService$Alcance.class
+com\academia\dto\RedeDtos$ExcluirUnidadeRequest.class
 com\academia\service\DashboardService.class
 com\academia\dto\AuthDtos$CodigoLoginRequest.class
 com\academia\dto\MensalidadeResponse.class
 com\academia\dto\AuthDtos$UsuarioResponse.class
 com\academia\controller\TreinoController.class
+com\academia\dto\AuthDtos$ExcluirContaRequest.class
 com\academia\dto\AvaliacaoRequest.class
 com\academia\service\PlanoService.class
 com\academia\dto\AuthDtos$UsuarioRequest.class
@@ -89,3 +96,4 @@ com\academia\security\Totp.class
 com\academia\dto\AuthDtos$SessaoResponse.class
 com\academia\security\DesafiosDoisFatores$Desafio.class
 com\academia\controller\ProfessorController.class
+com\academia\dto\RedeDtos$ExclusaoUnidadeInfo.class

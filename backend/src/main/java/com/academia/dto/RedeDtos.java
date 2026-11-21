@@ -47,6 +47,16 @@ public final class RedeDtos {
                                 DashboardResponse numeros, List<UsuarioResponse> administradores, long usuarios) {
     }
 
+    /** Prévia da exclusão de uma unidade. aberta: o dono está com ela aberta agora. */
+    public record ExclusaoUnidadeInfo(Long id, String nome, long alunos, long usuarios, boolean pedeCodigo, boolean aberta) {
+    }
+
+    public record ExcluirUnidadeRequest(
+            @NotBlank(message = "é obrigatória") String senha,
+            String codigo,
+            @NotBlank(message = "é obrigatória") String confirmacao) {
+    }
+
     /** Soma de todas as unidades. */
     public record TotaisRede(long unidades, long alunosAtivos, BigDecimal recebidoNoMes, long mensalidadesAtrasadas,
                              BigDecimal valorEmAberto, long professores) {

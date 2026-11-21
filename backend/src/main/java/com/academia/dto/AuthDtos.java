@@ -56,6 +56,21 @@ public final class AuthDtos {
             @NotBlank(message = "é obrigatório") @Size(max = 120, message = "máximo de 120 caracteres") String nome) {
     }
 
+    /**
+     * Prévia da exclusão da própria conta. escopo: CONTA (só o usuário), ACADEMIA (último admin de uma
+     * academia avulsa: leva a academia e todos os dados) ou REDE (dono: leva a rede e todas as unidades).
+     * confirmacao é o texto que a pessoa precisa digitar.
+     */
+    public record ExclusaoContaInfo(String escopo, String confirmacao, String academia, String rede,
+                                    int academias, long alunos, long outrosUsuarios, boolean pedeCodigo) {
+    }
+
+    public record ExcluirContaRequest(
+            @NotBlank(message = "é obrigatória") String senha,
+            String codigo,
+            @NotBlank(message = "é obrigatória") String confirmacao) {
+    }
+
     /** Sessões abertas da própria conta (navegadores logados agora, contando este). */
     public record SessoesResponse(long abertas) {
     }

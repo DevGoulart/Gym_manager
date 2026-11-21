@@ -3,6 +3,7 @@ package com.academia.controller;
 import com.academia.dto.AuthDtos.*;
 import com.academia.service.AuthService;
 import com.academia.service.DoisFatoresService;
+import com.academia.service.ExclusaoContaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -13,8 +14,10 @@ public class AuthController {
 
     private final AuthService service;
     private final DoisFatoresService doisFatores;
+    private final ExclusaoContaService exclusao;
 
-    public AuthController(AuthService service, DoisFatoresService doisFatores) {
+    public AuthController(AuthService service, DoisFatoresService doisFatores, ExclusaoContaService exclusao) {
+        this.exclusao = exclusao;
         this.service = service;
         this.doisFatores = doisFatores;
     }
@@ -106,6 +109,19 @@ public class AuthController {
     @DeleteMapping("/sessoes/outras")
     public SessoesResponse encerrarOutrasSessoes() {
         return service.encerrarOutrasSessoes();
+    }
+
+    /** O que a exclusão da conta vai apagar e o texto de confirmação. */
+    @GetMapping("/conta/exclusao")
+    public ExclusaoContaInfo exclusaoConta() {
+        return exclusao.info();
+    }
+
+    /** Exclui a própria conta (e a academia ou a rede, se for o último administrador ou o dono). */
+    @PostMapping("/conta/excluir")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void excluirConta(@Valid @RequestBody ExcluirContaRequest req) {
+        exclusao.excluir(req);
     }
 
     @PostMapping("/senha")

@@ -1640,11 +1640,12 @@ TELAS.rede = async () => {
                     : `<button class="primario pequeno" data-acao="abrirUnidade" data-id="${u.id}">Abrir unidade</button>`}
           <button class="pequeno" data-acao="novoAdminUnidade" data-id="${u.id}">+ Administrador</button>
           <button class="pequeno" data-acao="editarUnidade" data-id="${u.id}">Editar</button>
+          ${u.sede ? '' : `<button class="pequeno perigo" data-acao="excluirUnidade" data-id="${u.id}">Excluir</button>`}
         </footer>
       </article>`).join('')}
       ${cheia ? '' : `<button type="button" class="unidade-nova" data-acao="novaUnidade"><span>+</span>Nova unidade<small>${unidades.length} de ${rede.limiteUnidades} usadas</small></button>`}
     </div>
-    <p class="dica rede-dica">Abrir uma unidade troca o sistema inteiro para ela: alunos, planos, mensalidades e usuários passam a ser dessa unidade, com poderes de administrador. Os administradores de cada unidade continuam vendo só a própria.</p>`;
+    <p class="dica rede-dica">Abrir uma unidade troca o sistema inteiro para ela: alunos, planos, mensalidades e usuários passam a ser dessa unidade, com poderes de administrador. Os administradores de cada unidade continuam vendo só a própria. Excluir uma unidade apaga tudo o que há nela (a sua unidade principal não pode ser excluída).</p>`;
 };
 
 const camposAdmin = () => [
@@ -2234,17 +2235,17 @@ ACOES.baixarCodigos = () => {
 /* ---------------------------- MEU PERFIL ---------------------------- */
 /* Tudo da própria conta numa página: dados, senha, verificação em duas etapas,
    dispositivos lembrados, sessões abertas e o tutorial. */
-const campoPerfil = (nome, rotulo, tipo = 'text', extra = '') => `
+const campoPerfil = (nome, rotulo, tipo = 'text', extra = '', prefixo = 'perfil') => `
   <div class="campo" data-campo="${nome}">
-    <label class="rotulo" for="perfil_${nome}">${rotulo}</label>
-    <input id="perfil_${nome}" name="${nome}" type="${tipo}" ${extra}>
+    <label class="rotulo" for="${prefixo}_${nome}">${rotulo}</label>
+    <input id="${prefixo}_${nome}" name="${nome}" type="${tipo}" ${extra}>
     <small class="erro-campo" role="alert" hidden></small>
   </div>`;
 
 TELAS.perfil = async () => {
   const { usuario, academia, rede } = sessao;
   cabecalho('Meu|Perfil', `Sua conta no sistema da <b>${esc(academia.nome)}</b>: dados de acesso, senha e segurança.`, '', 'Sua conta');
-  const [st, ses] = await Promise.all([requisitar('/auth/2fa', 'GET'), requisitar('/auth/sessoes', 'GET')]);
+  const [st, ses, exc] = await Promise.all([requisitar('/auth/2fa', 'GET'), requisitar('/auth/sessoes', 'GET'), requisitar('/auth/conta/exclusao', 'GET').catch(() => null)]);
   const quando = (iso) => (iso ? data(iso.slice(0, 10)) : '—');
   const outras = Math.max(0, ses.abertas - 1);
   conteudo.innerHTML = `
@@ -2318,6 +2319,7 @@ TELAS.perfil = async () => {
         <p class="dica">Reveja o tour pelas telas do sistema, com o que cada parte faz.</p>
         <button type="button" data-acao="tutorial">Rever o tutorial</button>
       </section>
+      ${exc ? secaoExcluirConta(exc) : ''}
     </div>`;
 
   // Nome
@@ -2357,6 +2359,8 @@ TELAS.perfil = async () => {
     }, { 'senha atual': 'senhaAtual' });
   });
 
+  if (exc) ligarExcluirConta(exc);
+
   // Desativar duas etapas
   $('#formPerfilDesativar')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -2373,6 +2377,173 @@ TELAS.perfil = async () => {
       aviso('Verificação em duas etapas desativada.');
       renderizar();
     }, { senha: 'senha', 'código': 'codigo' });
+  });
+};
+
+/* ---- Excluir a conta ------------------------------------------------
+   O alcance vem do servidor: CONTA (só o usuário), ACADEMIA (último admin de
+   uma academia avulsa) ou REDE (dono). A confirmação é um texto digitado
+   ("EXCLUIR" ou o nome da academia/rede), a senha, o código das duas etapas
+   se estiver ativa e, por fim, segurar o botão por 2,5 segundos. */
+const TEMPO_SEGURAR_EXCLUSAO = 2500;
+const normalizarConfirmacao = (s) => String(s || '').normalize('NFD').replace(/\p{M}/gu, '').trim().replace(/\s+/g, ' ').toLowerCase();
+const plural = (n, um, varios) => `<b>${n}</b> ${n === 1 ? um : varios}`;
+
+const ICONE_LIXEIRA = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+
+/**
+ * Campos do sistema de exclusão (conta e unidade): o texto a digitar, a senha,
+ * o código das duas etapas (se ativa) e o botão de segurar.
+ */
+function camposExclusao({ prefixo, idBotao, rotuloConfirmacao, texto, pedeCodigo }) {
+  return `
+            <div class="campo" data-campo="confirmacao">
+              <label class="rotulo" for="${prefixo}_confirmacao">${rotuloConfirmacao}</label>
+              <p class="excluir-texto" aria-hidden="true">${esc(texto)}</p>
+              <input id="${prefixo}_confirmacao" name="confirmacao" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="140" placeholder="${esc(texto)}" aria-describedby="${prefixo}Dica">
+              <small class="erro-campo" role="alert" hidden></small>
+            </div>
+            ${campoPerfil('senha', 'Sua senha', 'password', 'autocomplete="current-password"', prefixo)}
+            ${pedeCodigo ? campoPerfil('codigo', 'Código do aplicativo', 'text', 'placeholder="000000 ou XXXXX-XXXXX" autocomplete="one-time-code" maxlength="11"', prefixo) : ''}
+            <div class="excluir-acao">
+              <button type="button" id="${idBotao}" data-sem-som></button>
+              <p class="dica" id="${prefixo}Dica">${pedeCodigo ? 'Preencha os três campos' : 'Preencha os dois campos'} e <b>segure o botão</b> por ${String(TEMPO_SEGURAR_EXCLUSAO / 1000).replace('.', ',')} segundos. Se soltar antes, nada acontece.</p>
+            </div>`;
+}
+
+/**
+ * Liga o formulário de exclusão: o botão de segurar (com som) só libera quando o texto
+ * confere e a senha (e o código) estão preenchidos. Ao encher, chama enviar(corpo);
+ * erro de senha, código ou confirmação aparece no campo certo e o botão volta ao início.
+ */
+function ligarExclusao(raiz, { idBotao, texto, pedeCodigo, rotulo, enviar, aoExcluir }) {
+  // raiz: o <form> (perfil) ou um contêiner dentro do modal, que já é um <form> (não dá para aninhar)
+  const botao = document.getElementById(idBotao);
+  const dialogo = raiz.closest('dialog');
+  const campo = (nome) => raiz.querySelector(`[name="${nome}"]`);
+  const hb = HoldButton.montar(botao, {
+    rotulo, rotuloFeito: 'Excluindo…', icone: ICONE_LIXEIRA, iconeFeito: ICONE_LIXEIRA,
+    corFundo: '#1d0505', corPreenchimento: 'var(--vermelho)', corTexto: '#ff8a8a', corTextoPreenchido: '#fff',
+    raio: 4, tempo: TEMPO_SEGURAR_EXCLUSAO, reiniciarApos: 0, desativado: true, som: true,
+    aoSegurar: () => excluir(),
+    aoTocar: () => aviso('Segure o botão até encher para confirmar a exclusão.'),
+  });
+  // fechar o modal no meio do "segurar" (Esc, Cancelar) cancela tudo
+  dialogo?.addEventListener('close', () => hb.desativar(true), { once: true });
+
+  const confere = () => normalizarConfirmacao(campo('confirmacao').value) === normalizarConfirmacao(texto);
+  const pronto = () => confere() && !!campo('senha').value && (!pedeCodigo || !!campo('codigo').value.trim());
+  raiz.addEventListener('input', (e) => {
+    if (e.target.name) mostrarErroCampo(raiz, e.target.name, null);
+    hb.desativar(!pronto());
+    raiz.querySelector('[data-campo=confirmacao]').classList.toggle('confere', confere());
+  });
+  // Enter num campo não envia nada: a exclusão só acontece segurando o botão
+  raiz.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); if (pronto()) botao.focus(); }
+  });
+
+  async function excluir() {
+    if (!raiz.isConnected || (dialogo && !dialogo.open)) return hb.reiniciar();
+    const corpo = { senha: campo('senha').value, codigo: pedeCodigo ? campo('codigo').value.trim() : null, confirmacao: campo('confirmacao').value };
+    try {
+      await enviar(corpo);
+    } catch (err) {
+      window.Sons?.tocar('erro');
+      hb.reiniciar();
+      const m = err.message.toLowerCase();
+      const alvo = m.includes('senha') ? 'senha' : m.includes('código') ? 'codigo' : m.includes('confirmação') ? 'confirmacao' : null;
+      if (alvo && mostrarErroCampo(raiz, alvo, err.message)) campo(alvo).focus();
+      else aviso(err.message, true);
+      return;
+    }
+    window.Sons?.tocar('excluido');
+    aoExcluir();
+  }
+  return hb;
+}
+
+function secaoExcluirConta(exc) {
+  const academia = esc(exc.academia), rede = esc(exc.rede || '');
+  const perdas = `${plural(exc.alunos, 'aluno', 'alunos')} com as mensalidades, fichas de treino e avaliações, os professores, os planos e ${exc.outrosUsuarios ? `${plural(exc.outrosUsuarios, 'outro usuário', 'outros usuários')} (que perdem o acesso)` : 'nenhum outro usuário'}`;
+  const aviso = {
+    CONTA: `Sua conta de acesso será apagada: você sai de todos os navegadores e não poderá mais entrar com <b>${esc(sessao.usuario.email)}</b>. Os dados da academia continuam lá${exc.rede ? ', e o dono da rede segue cuidando da unidade' : ''}.`,
+    ACADEMIA: `Você é o <b>único administrador</b> da <b>${academia}</b>. Excluir a sua conta apaga a academia inteira: ${perdas}.`,
+    REDE: `Você é o <b>dono</b> da rede <b>${rede}</b>. Excluir a sua conta apaga a rede e ${exc.academias === 1 ? 'a única unidade' : `as <b>${exc.academias}</b> unidades`}: ${perdas}.`,
+  }[exc.escopo];
+  const rotuloConfirmacao = exc.escopo === 'CONTA' ? 'Digite EXCLUIR para confirmar'
+    : exc.escopo === 'REDE' ? 'Digite o nome da rede para confirmar' : 'Digite o nome da academia para confirmar';
+  return `
+      <section class="painel perfil-cartao perfil-largo perfil-excluir" aria-labelledby="pfExcluir">
+        <header class="perfil-topo-secao">
+          <h2 class="titulo-secao" id="pfExcluir">Excluir <span>conta</span></h2>
+          ${exc.escopo === 'CONTA' ? '' : badge([exc.escopo === 'REDE' ? 'Apaga a rede' : 'Apaga a academia', 'b-danger'])}
+        </header>
+        <p class="perfil-status">${aviso} <b class="txt-alerta">Não dá para desfazer.</b></p>
+        <details class="perfil-desativar perfil-excluir-detalhes">
+          <summary>Quero excluir minha conta</summary>
+          <form id="formPerfilExcluir" class="perfil-form vertical" novalidate>
+            ${camposExclusao({ prefixo: 'excluir', idBotao: 'botaoExcluirConta', rotuloConfirmacao, texto: exc.confirmacao, pedeCodigo: exc.pedeCodigo })}
+          </form>
+        </details>
+      </section>`;
+}
+
+function ligarExcluirConta(exc) {
+  const form = $('#formPerfilExcluir');
+  if (!form) return;
+  ligarExclusao(form, {
+    idBotao: 'botaoExcluirConta', texto: exc.confirmacao, pedeCodigo: exc.pedeCodigo,
+    rotulo: exc.escopo === 'CONTA' ? 'Segure para excluir' : exc.escopo === 'REDE' ? 'Segure para excluir a rede' : 'Segure para excluir tudo',
+    enviar: (corpo) => api('/auth/conta/excluir', { method: 'POST', body: corpo }),
+    aoExcluir: () => {
+      apagarDispositivo(sessao.usuario.email);
+      try { Object.keys(localStorage).filter((k) => k.startsWith('forcatotal.tutorial.')).forEach((k) => localStorage.removeItem(k)); } catch { /* sem armazenamento */ }
+      setTimeout(() => {
+        encerrarSessao(exc.escopo === 'CONTA' ? 'Sua conta foi excluída.' : exc.escopo === 'REDE' ? 'Sua conta e a rede foram excluídas.' : 'Sua conta e a academia foram excluídas.');
+        history.replaceState(null, '', '#/dashboard');
+      }, 700);
+    },
+  });
+}
+
+/**
+ * Excluir uma unidade da rede (só o dono, e nunca a unidade principal dele): mesmo sistema
+ * da conta, num modal. Se o dono estava com ela aberta, volta para a unidade principal.
+ */
+ACOES.excluirUnidade = async (id) => {
+  const info = await requisitar(`/rede/unidades/${id}/exclusao`, 'GET'); // sem cache: os números mudam
+  const usuarios = info.usuarios
+    ? `${plural(info.usuarios, 'usuário', 'usuários')} (administradores e funcionários perdem o acesso na hora)`
+    : 'nenhum usuário';
+  abrirModal({
+    titulo: 'Excluir unidade',
+    corpo: `
+      <div class="excluir-modal">
+        <p class="perfil-status">Excluir a <b>${esc(info.nome)}</b> apaga a unidade inteira: ${plural(info.alunos, 'aluno', 'alunos')} com as mensalidades, fichas de treino e avaliações, os professores, os planos e ${usuarios}.${info.aberta ? ' Você está com ela aberta: depois, o sistema volta para a sua unidade principal.' : ''} As outras unidades não mudam. <b class="txt-alerta">Não dá para desfazer.</b></p>
+        <div id="formExcluirUnidade" class="perfil-form vertical">
+          ${camposExclusao({ prefixo: 'unidade', idBotao: 'botaoExcluirUnidade', rotuloConfirmacao: 'Digite o nome da unidade para confirmar', texto: info.nome, pedeCodigo: info.pedeCodigo })}
+        </div>
+      </div>`,
+    rodape: '<button type="button" data-fechar>Cancelar</button>',
+  });
+  $('#unidade_confirmacao').focus({ preventScroll: true });
+  ligarExclusao($('#formExcluirUnidade'), {
+    idBotao: 'botaoExcluirUnidade', texto: info.nome, pedeCodigo: info.pedeCodigo,
+    rotulo: 'Segure para excluir a unidade',
+    enviar: (corpo) => api(`/rede/unidades/${id}/excluir`, { method: 'POST', body: corpo }),
+    aoExcluir: () => setTimeout(async () => {
+      fecharModal();
+      if (info.aberta) { // o servidor já voltou a sessão para a unidade principal
+        const eu = await requisitar('/auth/eu', 'GET');
+        sessao = { usuario: eu.usuario, academia: eu.academia, rede: eu.rede };
+        cacheGet.clear();
+        ultimoModulo = null;
+        atualizarCabecalhoUsuario();
+      }
+      aviso(`Unidade “${info.nome}” excluída.`);
+      renderizar();
+    }, 700),
   });
 };
 

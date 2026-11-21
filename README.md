@@ -74,6 +74,12 @@ O sistema atende **várias academias ao mesmo tempo**. Cada academia tem os pró
   - depois de 5 senhas erradas em 15 minutos, o login daquele e-mail fica bloqueado;
   - toda consulta é filtrada pela academia de quem está logado. Um id de outra academia responde 404, como se não existisse.
 - **Meu perfil** (menu do usuário → *Meu perfil*, rota `#/perfil`): página com tudo da própria conta. Mostra os dados (nome, e-mail, perfil, academia/unidade, rede e desde quando), permite trocar o próprio nome e a senha, traz a verificação em duas etapas (ativar, desativar, códigos restantes e dispositivos lembrados) e as **sessões abertas**, com *Encerrar as outras sessões* (este navegador continua conectado). Também tem o botão para rever o tutorial. O e-mail, que é o login, só o administrador troca.
+- **Excluir a conta** (fim de *Meu perfil*): o aviso diz exatamente o que some antes de qualquer coisa.
+  - **Funcionário, ou administrador com outro administrador ativo, ou administrador de uma unidade de rede:** apaga só a própria conta. Os dados da academia ficam, e numa rede o dono segue cuidando da unidade. A confirmação é digitar `EXCLUIR`.
+  - **Último administrador de uma academia avulsa:** apaga a **academia inteira**: alunos, mensalidades, fichas de treino, avaliações, professores, planos e os outros usuários. A confirmação é digitar o **nome da academia**.
+  - **Dono da rede:** apaga a **rede com todas as unidades** e tudo o que há nelas. A confirmação é digitar o **nome da rede**.
+  - Além do texto (maiúsculas, acentos e espaços extras não importam), pede a senha e, com a verificação em duas etapas ativa, o código do aplicativo ou de recuperação. Por fim, é preciso **segurar o botão por 2,5 segundos** (`static/js/hold-button.js` e `static/css/hold-button.css`, porte em JS puro do HoldButton do React Bits). Soltar antes, arrastar para fora ou apertar Esc cancela. No teclado, segure Enter ou Espaço.
+  - Todas as sessões e dispositivos lembrados das contas apagadas caem na hora. Não há como desfazer.
 - **Verificação em duas etapas (opcional, por usuário):** em *Meu perfil* → *Verificação em duas etapas*. O usuário lê um QR Code com um aplicativo autenticador (Google Authenticator, Microsoft Authenticator ou Authy) e, a partir daí, o login pede também o código de 6 dígitos que muda a cada 30 segundos. Detalhes:
   - na ativação aparecem 8 **códigos de recuperação**, de uso único, para quem perder o celular. Eles não são mostrados de novo;
   - um código já usado não vale outra vez, e códigos errados contam para o bloqueio de tentativas;
@@ -90,7 +96,7 @@ Para quem tem mais de uma academia. Cada unidade continua isolada, com os própr
 
 | Perfil | Vê | Pode fazer |
 |---|---|---|
-| Dono da rede | Todas as unidades da rede, cada uma separada | Criar unidades (até 5), cadastrar o administrador de cada uma, abrir qualquer unidade e gerenciá-la com os poderes de administrador |
+| Dono da rede | Todas as unidades da rede, cada uma separada | Criar unidades (até 5), cadastrar o administrador de cada uma, abrir qualquer unidade e gerenciá-la com os poderes de administrador, excluir unidades (menos a principal) |
 | Administrador | Só a própria unidade | Tudo dentro da unidade (alunos, planos, usuários…), sem ver as outras nem o dono |
 | Funcionário | Só a própria unidade | O dia a dia da unidade |
 
@@ -98,6 +104,11 @@ Para quem tem mais de uma academia. Cada unidade continua isolada, com os própr
   - *Cadastro novo:* na tela de cadastro, escolha **Rede de academias**, informe o nome da rede e o da primeira unidade. Quem se cadastra vira o dono.
   - *Academia que já existe:* o administrador abre o menu da conta → **Transformar em rede**. A academia vira a primeira unidade, com todos os dados, e ele vira o dono.
 - **Painel da rede** (menu **Rede**, só para o dono): os totais da rede e um cartão por unidade, com alunos ativos, atrasadas, professores, usuários, recebido no mês (com barra para comparar as unidades), valor em aberto e os administradores. Dali o dono cria unidades (sempre com o administrador), cadastra mais administradores, renomeia e **abre** uma unidade.
+- **Excluir uma unidade** (botão **Excluir** no cartão da unidade): usa o mesmo sistema da exclusão da conta, num modal. O aviso diz quantos alunos e usuários somem. A confirmação pede o **nome da unidade** digitado, a senha do dono e, se a verificação em duas etapas estiver ativa, o código. Por fim, é preciso segurar o botão por 2,5 segundos, com o mesmo som.
+  - Apaga tudo o que há na unidade: alunos, mensalidades, treinos, avaliações, professores, planos e os usuários, que perdem o acesso na hora. As outras unidades não mudam.
+  - A **unidade principal** do dono (a do cadastro dele) não tem o botão e o servidor recusa. Para apagar a rede inteira, o dono exclui a própria conta em *Meu perfil*.
+  - Se o dono estava com a unidade aberta, o sistema volta para a unidade principal.
+  - Só o dono, e só nas unidades da própria rede (administradores recebem 403, e outra rede recebe 404). A remoção dos dados fica em `service/RemocaoDeAcademias.java`, a mesma usada pela exclusão da conta.
 - **Abrir uma unidade** troca o sistema inteiro para ela: todas as telas passam a mostrar os dados dessa unidade. Uma faixa amarela no topo mostra em qual unidade o dono está, com o link *Trocar unidade*. Cada login do dono começa na unidade do cadastro dele.
 - **Isolamento:**
   - o servidor confere a cada requisição se a unidade aberta é mesmo da rede do dono;
@@ -140,6 +151,10 @@ No primeiro acesso de cada usuário, um tour guiado passa pelas telas reais do s
 - **Proteção contra perda de dados**: fechar um formulário preenchido (Cancelar, X, Esc ou clique fora) pergunta antes de descartar.
 - **Atalhos**: `Ctrl+Enter` salva o formulário; `/` vai para a busca; `Enter` no campo de carga cria um novo exercício.
 - **Tabelas**: clique no título de uma coluna para ordenar. No celular, cada linha vira um cartão.
+- **Sons dos cliques**: botões, itens de menu, abas, caixas de seleção e perguntas tocam um som curto, gerado na hora pelo navegador (Web Audio, sem arquivos de áudio). São quatro tipos: clique comum, botão principal (salvar/enviar), ação de risco (excluir, sair) e alternar (caixas, opções, abas). Com mouse, o som toca ao apertar o botão. No toque e no teclado, toca no clique, para não soar enquanto a página rola.
+  - **Ligar ou desligar:** no sistema, pela opção **Sons dos cliques** do menu da conta. Na apresentação, pelo botão de alto-falante no topo. A escolha vale para as duas páginas, no mesmo navegador.
+  - **Botão de excluir a conta:** enquanto o botão é segurado, um zumbido grave sobe de tom e treme mais rápido conforme o preenchimento enche. Se a pessoa soltar antes, o som "murcha" junto com o botão. Quando enche, toca uma trava curta. Depois vem um impacto grave se a exclusão deu certo, ou dois toques secos se a senha ou o código estavam errados. Outros botões de segurar podem usar o mesmo som com a opção `som: true` do `HoldButton.montar`.
+  - **Arquivo:** `static/js/sons.js`. Para deixar um elemento sem som, use `data-sem-som`. Para forçar um tipo, use `data-som="primario|perigo|alternar|clique"`.
 - **Desempenho**: compressão gzip (o JavaScript cai de 82 KB para 23 KB), cache com validação (HTTP 304) e cache de dados no navegador, que é limpo a cada gravação.
 
 ## API REST (resumo)
@@ -154,10 +169,10 @@ No primeiro acesso de cada usuário, um tour guiado passa pelas telas reais do s
 | Avaliações | `GET/POST /api/avaliacoes` (`?alunoId=`), `GET/PUT/DELETE /api/avaliacoes/{id}` |
 | Dashboard | `GET /api/dashboard` |
 | Login (público) | `POST /api/auth/login`, `POST /api/auth/cadastro` (nova academia) |
-| Sessão e perfil | `GET /api/auth/eu`, `PUT /api/auth/eu` (próprio nome), `POST /api/auth/logout`, `POST /api/auth/senha`, `GET /api/auth/sessoes`, `DELETE /api/auth/sessoes/outras` |
+| Sessão e perfil | `GET /api/auth/eu`, `PUT /api/auth/eu` (próprio nome), `POST /api/auth/logout`, `POST /api/auth/senha`, `GET /api/auth/sessoes`, `DELETE /api/auth/sessoes/outras`, `GET /api/auth/conta/exclusao` (o que a exclusão apaga), `POST /api/auth/conta/excluir` |
 | Duas etapas | `POST /api/auth/login/2fa` (público: desafio + código), `GET /api/auth/2fa`, `POST /api/auth/2fa/iniciar`, `POST /api/auth/2fa/ativar`, `POST /api/auth/2fa/desativar`, `DELETE /api/auth/2fa/dispositivos/{id}` e `DELETE /api/auth/2fa/dispositivos` (esquecer dispositivos lembrados), `POST /api/usuarios/{id}/2fa/redefinir` (admin) |
 | Usuários (só admin) | `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}` |
-| Rede (só dono) | `GET /api/rede` (painel), `POST /api/rede/unidades` (unidade + administrador), `PUT /api/rede/unidades/{id}`, `POST /api/rede/unidades/{id}/admins`, `POST /api/rede/unidades/{id}/abrir` |
+| Rede (só dono) | `GET /api/rede` (painel), `POST /api/rede/unidades` (unidade + administrador), `PUT /api/rede/unidades/{id}`, `POST /api/rede/unidades/{id}/admins`, `POST /api/rede/unidades/{id}/abrir`, `GET /api/rede/unidades/{id}/exclusao` (o que a exclusão apaga), `POST /api/rede/unidades/{id}/excluir` |
 | Rede (admin de academia avulsa) | `POST /api/rede/converter` (transforma a academia em rede e vira o dono) |
 
 Fora o login e o cadastro, toda chamada precisa do cabeçalho `Authorization: Bearer <token>`, com o token devolvido pelo login. Sem ele, a API responde 401; sem permissão para a ação, responde 403.

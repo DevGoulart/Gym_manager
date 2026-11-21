@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600;1,700;1,800;1,900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=12">
+  <link rel="stylesheet" href="/css/style.css?v=15">
+  <link rel="stylesheet" href="/css/hold-button.css">
 </head>
 <body class="verificando">
   <!-- ===================== TELA DE LOGIN / CADASTRO DE ACADEMIA ===================== -->
@@ -175,6 +176,7 @@
         <a href="#/rede" role="menuitem" data-dono>Painel da rede</a>
         <a href="#/usuarios" role="menuitem" data-admin>Usuários da academia</a>
         <button type="button" role="menuitem" data-acao="converterRede" data-avulsa>Transformar em rede</button>
+        <button type="button" role="menuitemcheckbox" aria-checked="true" data-sons-alternar>Sons dos cliques <span class="chave-mini" aria-hidden="true"></span></button>
         <button type="button" role="menuitem" data-acao="tutorial">Tutorial do sistema</button>
         <button type="button" role="menuitem" class="sair" data-acao="sair">Sair</button>
       </div>
@@ -228,7 +230,9 @@
   <div id="toasts" class="toasts" aria-live="assertive"></div>
 
   <script src="/js/ticker.js"></script>
+  <script src="/js/sons.js?v=2"></script>
+  <script src="/js/hold-button.js?v=2"></script>
   <script src="/js/tutorial.js"></script>
-  <script src="/js/app.js?v=10"></script>
+  <script src="/js/app.js?v=13"></script>
 </body>
 </html>
