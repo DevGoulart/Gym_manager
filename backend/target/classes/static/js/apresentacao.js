@@ -184,6 +184,66 @@
     if (jaTenho) jaTenho.textContent = 'Abrir o sistema';
   }
 
-  function iniciar() { iniciarAbas(); iniciarSimulador(); iniciarCobranca(); iniciarPerguntas(); iniciarAcesso(); }
+  /* ---------------- Plano Rede: comparar quantas unidades ---------------- */
+  // O preço do cartão do Rede muda com a quantidade (5 incluídas + vagas extras) e mostra quanto sai cada unidade.
+  let extrasRede = 0;
+  function iniciarUnidades() {
+    const caixa = $('[data-unidades]');
+    if (!caixa) return;
+    const card = caixa.closest('.plano-card');
+    const precoEl = $('.plano-preco b', card), cobradoEl = $('.plano-cobrado', card);
+    const d = caixa.dataset, base = +d.base, max = +d.max;
+    const br = (v) => v.toLocaleString('pt-BR', { minimumFractionDigits: Number.isInteger(v) ? 0 : 2, maximumFractionDigits: 2 });
+    const modo = () => ($('.cobranca')?.dataset.modo === 'anual' ? 'anual' : 'mensal');
+    const [menos, mais] = $$('[data-unid]', caixa);
+
+    function atualizar(soPorUnidade = false) {
+      const unidades = base + extrasRede;
+      const mensal = +d.precoMensal + +d.extraMensal * extrasRede;
+      const anual = +d.precoAnual + +d.extraAnual * extrasRede;
+      precoEl.dataset.mensal = br(mensal);
+      precoEl.dataset.anual = br(Math.round((anual / 12) * 100) / 100);
+      cobradoEl.dataset.anual = `R$ ${br(anual)} cobrados por ano`;
+      if (!soPorUnidade) { // na troca mensal/anual, o preço anima pelo iniciarCobranca
+        precoEl.textContent = precoEl.dataset[modo()];
+        cobradoEl.textContent = cobradoEl.dataset[modo()];
+      }
+      const porMes = modo() === 'anual' ? anual / 12 : mensal;
+      $('output', caixa).textContent = `${unidades} unidades`;
+      $('[data-por-unidade]', caixa).textContent = `R$ ${br(Math.round((porMes / unidades) * 100) / 100)} por unidade`;
+      menos.disabled = extrasRede <= 0;
+      mais.disabled = unidades >= max;
+    }
+    [menos, mais].forEach((b) => b.addEventListener('click', () => {
+      extrasRede = Math.min(max - base, Math.max(0, extrasRede + Number(b.dataset.unid)));
+      atualizar();
+    }));
+    $$('[data-cobranca]').forEach((b) => b.addEventListener('click', () => setTimeout(() => atualizar(true), 0)));
+    atualizar();
+  }
+
+  /* ---------------- Botões dos planos: levam ao checkout com a escolha ---------------- */
+  // Sem login: guarda a escolha e abre o cadastro (depois do cadastro, o sistema vai direto ao checkout).
+  function iniciarCheckout() {
+    let logado = false;
+    try { logado = !!localStorage.getItem('forcatotal.token'); } catch { /* sem armazenamento */ }
+    $$('.plano-card').forEach((card) => {
+      const botao = $('.plano-botao', card);
+      if (!botao) return;
+      botao.addEventListener('click', () => {
+        const plano = String(card.dataset.plano || '').toUpperCase();
+        const ciclo = $('.cobranca')?.dataset.modo === 'anual' ? 'ANUAL' : 'MENSAL';
+        const extras = plano === 'REDE' ? extrasRede : 0;
+        if (logado) {
+          botao.href = `/app#/checkout?plano=${plano}&ciclo=${ciclo}${extras ? `&extras=${extras}` : ''}`;
+        } else {
+          try { sessionStorage.setItem('forcatotal.planoEscolhido', JSON.stringify({ plano, ciclo, extras })); } catch { /* sem armazenamento: só abre o cadastro */ }
+          botao.href = '/app#cadastro';
+        }
+      });
+    });
+  }
+
+  function iniciar() { iniciarAbas(); iniciarSimulador(); iniciarCobranca(); iniciarUnidades(); iniciarCheckout(); iniciarPerguntas(); iniciarAcesso(); }
   if (document.readyState !== 'loading') iniciar(); else document.addEventListener('DOMContentLoaded', iniciar);
 })();

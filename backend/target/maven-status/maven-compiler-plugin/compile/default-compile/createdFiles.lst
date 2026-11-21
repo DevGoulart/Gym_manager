@@ -41,6 +41,7 @@ com\academia\controller\AvaliacaoController.class
 com\academia\service\AlunoService.class
 com\academia\dto\AuthDtos$EuResponse.class
 com\academia\service\UsuarioService.class
+com\academia\service\AssinaturaService$1.class
 com\academia\dto\AuthDtos$CodigosRecuperacao.class
 com\academia\dto\AuthDtos$CodigoRequest.class
 com\academia\service\ExclusaoContaService$Escopo.class

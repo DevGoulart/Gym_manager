@@ -43,11 +43,14 @@ public class RedeService {
     private final AlunoRepository alunoRepository;
     private final DoisFatoresService doisFatores;
     private final RemocaoDeAcademias remocao;
+    private final AssinaturaService assinaturas;
 
     public RedeService(RedeRepository redeRepository, AcademiaRepository academiaRepository,
                        UsuarioRepository usuarioRepository, SessaoRepository sessaoRepository,
                        DashboardService dashboardService, PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual,
-                       AlunoRepository alunoRepository, DoisFatoresService doisFatores, RemocaoDeAcademias remocao) {
+                       AlunoRepository alunoRepository, DoisFatoresService doisFatores, RemocaoDeAcademias remocao,
+                       AssinaturaService assinaturas) {
+        this.assinaturas = assinaturas;
         this.alunoRepository = alunoRepository;
         this.doisFatores = doisFatores;
         this.remocao = remocao;
@@ -107,8 +110,9 @@ public class RedeService {
     @Transactional
     public UnidadeResumo criarUnidade(UnidadeRequest req) {
         Rede rede = redeDoDono();
+        assinaturas.exigirCadastroLiberado(academiaAtual.id());
         if (academiaRepository.countByRedeId(rede.getId()) >= rede.getLimiteUnidades()) {
-            throw new RegraNegocioException("O plano Rede permite até " + rede.getLimiteUnidades() + " unidades.");
+            throw new RegraNegocioException("A rede já usa as " + rede.getLimiteUnidades() + " vagas de unidade. Compre mais vagas em Plano e cobrança.");
         }
         Academia a = new Academia(req.nome().trim(), Textos.limpar(req.cidade()));
         a.setRede(rede);
@@ -130,6 +134,7 @@ public class RedeService {
     @Transactional
     public UsuarioResponse criarAdmin(Long unidadeId, AdminRequest req) {
         Academia a = unidade(unidadeId, redeDoDono());
+        assinaturas.exigirCadastroLiberado(a.getId());
         return UsuarioResponse.de(novoAdmin(a, req));
     }
 
@@ -222,9 +227,11 @@ public class RedeService {
         if (a.getRede() != null) {
             throw new RegraNegocioException("Esta academia já faz parte de uma rede.");
         }
+        assinaturas.exigirPodeConverter(a); // sem pagar, só durante o teste
         Rede rede = redeRepository.save(new Rede(req.nomeRede().trim()));
         a.setRede(rede);
         academiaRepository.save(a);
+        assinaturas.moverParaRede(a, rede);
         u.setPerfil(Perfil.DONO);
         usuarioRepository.save(u);
         sessaoRepository.findById(logado.sessaoId()).ifPresent(s -> { s.setAcademiaAtiva(a); sessaoRepository.save(s); });

@@ -25,13 +25,15 @@ public class AlunoService {
     private final FichaTreinoRepository fichaTreinoRepository;
     private final AvaliacaoFisicaRepository avaliacaoRepository;
     private final AcademiaAtual academiaAtual;
+    private final AssinaturaService assinaturas;
 
     public AlunoService(AlunoRepository alunoRepository,
                         PlanoService planoService,
                         MensalidadeRepository mensalidadeRepository,
                         FichaTreinoRepository fichaTreinoRepository,
                         AvaliacaoFisicaRepository avaliacaoRepository,
-                        AcademiaAtual academiaAtual) {
+                        AcademiaAtual academiaAtual, AssinaturaService assinaturas) {
+        this.assinaturas = assinaturas;
         this.alunoRepository = alunoRepository;
         this.planoService = planoService;
         this.mensalidadeRepository = mensalidadeRepository;
@@ -66,6 +68,9 @@ public class AlunoService {
         if (cpf != null && alunoRepository.existsByAcademiaIdAndCpf(academiaAtual.id(), cpf)) {
             throw new RegraNegocioException("Já existe um aluno com o CPF " + cpf);
         }
+        // limites do plano (aluno ativo ocupa vaga) e assinatura vencida
+        if (req.ativo() == null || req.ativo()) assinaturas.exigirVagaAluno(academiaAtual.id());
+        else assinaturas.exigirCadastroLiberado(academiaAtual.id());
         Aluno aluno = new Aluno();
         aluno.setAcademia(academiaAtual.referencia());
         preencher(aluno, req);
@@ -93,6 +98,8 @@ public class AlunoService {
         if (cpf != null && alunoRepository.existsByAcademiaIdAndCpfAndIdNot(academiaAtual.id(), cpf, id)) {
             throw new RegraNegocioException("Já existe outro aluno com o CPF " + cpf);
         }
+        // reativar um aluno ocupa uma vaga do plano
+        if (!aluno.isAtivo() && (req.ativo() == null || req.ativo())) assinaturas.exigirVagaAluno(academiaAtual.id());
         preencher(aluno, req);
         return toResponse(alunoRepository.save(aluno));
     }

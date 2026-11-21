@@ -37,9 +37,11 @@ public class DoisFatoresService {
     private final PasswordEncoder passwordEncoder;
     private final AcademiaAtual academiaAtual;
     private final DispositivosConfiaveis dispositivos;
+    private final Notificador notificador;
 
     public DoisFatoresService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
-                              AcademiaAtual academiaAtual, DispositivosConfiaveis dispositivos) {
+                              AcademiaAtual academiaAtual, DispositivosConfiaveis dispositivos, Notificador notificador) {
+        this.notificador = notificador;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.academiaAtual = academiaAtual;
@@ -96,6 +98,7 @@ public class DoisFatoresService {
         u.setTotpAtivadoEm(LocalDateTime.now());
         List<String> codigos = gerarCodigos(u);
         usuarioRepository.save(u);
+        notificador.doisFatoresAtivada(u.getId());
         return new CodigosRecuperacao(codigos);
     }
 
@@ -109,6 +112,7 @@ public class DoisFatoresService {
         limpar(u);
         usuarioRepository.save(u);
         dispositivos.esquecerTodos(u.getId());
+        notificador.doisFatoresDesativada(u.getId(), null);
     }
 
     /**

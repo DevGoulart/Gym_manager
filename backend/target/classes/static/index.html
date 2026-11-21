@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600;1,700;1,800;1,900&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/style.css?v=15">
+  <link rel="stylesheet" href="/css/style.css?v=17">
   <link rel="stylesheet" href="/css/hold-button.css">
 </head>
 <body class="verificando">
@@ -85,6 +85,7 @@
         <form id="formCadastro" class="form-acesso" role="tabpanel" aria-labelledby="abaCadastro" novalidate hidden>
           <h2>Cadastre sua <span>academia</span></h2>
           <p class="sub-acesso" id="cadSub">Em um minuto: você vira o administrador e já começa a usar.</p>
+          <p class="cad-plano" id="cadPlanoEscolhido" hidden></p>
           <div class="campos">
             <div class="campo full" data-campo="tipo">
               <span class="rotulo" id="r_tipoConta">Tipo de conta</span>
@@ -157,6 +158,25 @@
       <a href="#/usuarios" data-mod="usuarios" data-admin class="so-mobile">Usuários</a>
     </nav>
 
+    <!-- Notificações (js/notificacoes.js): sino com contador e painel -->
+    <div class="notif-area">
+      <button type="button" class="notif-botao" id="botaoNotificacoes" aria-haspopup="dialog" aria-expanded="false" aria-controls="painelNotificacoes" aria-label="Notificações">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9a6 6 0 1 1 12 0c0 6.5 2.5 8 2.5 8h-17S6 15.5 6 9"/><path d="M10.2 20.5a2 2 0 0 0 3.6 0"/></svg>
+        <span class="notif-contador" id="contadorNotificacoes" hidden>0</span>
+      </button>
+      <div class="notif-painel" id="painelNotificacoes" role="dialog" aria-labelledby="tituloNotificacoes" hidden>
+        <header class="notif-topo">
+          <h2 id="tituloNotificacoes">Notificações</h2>
+          <button type="button" class="link" id="marcarTodasNotificacoes">Marcar todas como lidas</button>
+          <button type="button" class="notif-engrenagem" id="botaoSonsNotificacoes" aria-pressed="false" aria-label="Sons das notificações" title="Sons das notificações">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+          </button>
+        </header>
+        <div class="notif-lista" id="listaNotificacoes" role="list"></div>
+        <div class="notif-sons" id="sonsNotificacoes" data-sem-som hidden></div>
+      </div>
+    </div>
+
     <div class="usuario-area">
       <button type="button" class="usuario-botao" id="botaoUsuario" aria-haspopup="menu" aria-expanded="false" aria-controls="menuUsuario">
         <span class="avatar" id="avatarUsuario" aria-hidden="true"></span>
@@ -173,6 +193,7 @@
           <span class="badge" id="menuPerfil"></span>
         </div>
         <a href="#/perfil" role="menuitem">Meu perfil</a>
+        <a href="#/assinatura" role="menuitem" data-admin>Plano e cobrança</a>
         <a href="#/rede" role="menuitem" data-dono>Painel da rede</a>
         <a href="#/usuarios" role="menuitem" data-admin>Usuários da academia</a>
         <button type="button" role="menuitem" data-acao="converterRede" data-avulsa>Transformar em rede</button>
@@ -189,6 +210,7 @@
 
   <!-- Dono da rede: em qual unidade ele está agindo agora -->
   <div class="barra-unidade" id="barraUnidade" data-dono role="status"></div>
+
 
   <section class="hero" aria-labelledby="titulo">
     <svg class="tri tri-1" viewBox="0 0 100 100" aria-hidden="true"><path d="M8 88 L50 12 L92 88 Z"/></svg>
@@ -230,9 +252,11 @@
   <div id="toasts" class="toasts" aria-live="assertive"></div>
 
   <script src="/js/ticker.js"></script>
-  <script src="/js/sons.js?v=2"></script>
+  <script src="/js/sons.js?v=3"></script>
   <script src="/js/hold-button.js?v=2"></script>
   <script src="/js/tutorial.js"></script>
-  <script src="/js/app.js?v=13"></script>
+  <script src="/js/app.js?v=16"></script>
+  <script src="/js/assinatura.js?v=2"></script>
+  <script src="/js/notificacoes.js?v=2"></script>
 </body>
 </html>

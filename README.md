@@ -117,6 +117,50 @@ Para quem tem mais de uma academia. Cada unidade continua isolada, com os própr
 - **Onde está no código:** `model/Rede.java`, perfil `DONO` em `model/Perfil.java`, a unidade aberta fica na sessão (`Sessao.academiaAtiva`) e é aplicada em `security/TokenFilter.java`, regras em `service/RedeService.java`, rotas em `controller/RedeController.java`.
 - **Bancos antigos:** ao subir esta versão, a coluna de perfis passa a aceitar o dono (`config/DadosIniciais.java`). Backup do banco anterior: `backend/data/backup-antes-da-rede/`.
 
+### Planos, checkout e vagas de unidade
+
+A assinatura do sistema usa os planos da página de apresentação. O pagamento é de **demonstração**: nenhum valor é cobrado.
+
+| Plano | Mensal | Anual | Limites |
+|---|---|---|---|
+| Essencial | R$ 99 | R$ 990 | 150 alunos ativos e 2 usuários |
+| Profissional | R$ 189 | R$ 1.890 | 600 alunos ativos, usuários ilimitados |
+| Rede | R$ 349 | R$ 3.490 | ilimitados, 5 unidades incluídas |
+| Vaga extra de unidade (só Rede) | R$ 59 cada | R$ 590 cada | até 20 unidades no total |
+
+- **Teste grátis:** contas novas, e as que já existiam, começam com **14 dias** com tudo liberado. A situação do teste aparece só em **Plano e cobrança** (e na seção de planos da apresentação). Nos 3 últimos dias, o sino de notificações avisa o administrador.
+- **Onde assinar:**
+  - Na apresentação, os botões dos planos levam a escolha (plano, mensal ou anual e, no Rede, quantas unidades) para o cadastro e, depois dele, direto ao checkout.
+  - No sistema: menu da conta → **Plano e cobrança** (só administradores). Essa tela mostra a situação, o uso comparado aos limites, as vagas de unidade, a comparação dos planos e o histórico de pagamentos.
+- **Comparar unidades:**
+  - O cartão do Rede na apresentação tem um seletor de 5 a 20 unidades, com o preço e quanto sai cada unidade.
+  - No sistema, uma tabela compara 5, 6, 8, 10, 15 e 20 unidades: total por mês e preço por unidade.
+- **Checkout** (`#/checkout`): o pedido (plano, cobrança e unidades) fica à esquerda, e o pagamento por **cartão, Pix ou boleto** fica à direita. Os valores sempre vêm do servidor.
+  - **Cartão:** validado como num gateway real (algoritmo de Luhn, validade e CVV de 3 ou 4 dígitos). Só a bandeira e os 4 últimos dígitos são gravados. Cartões de teste: `4242 4242 4242 4242` é aprovado e `4000 0000 0000 0002` é recusado.
+  - **Pix:** QR Code e copia e cola no formato do Banco Central, com CRC válido. Vale 30 minutos.
+  - **Boleto:** linha digitável, vence em 3 dias.
+  - Pix e boleto ficam aguardando até o botão **Simular pagamento**, que faz o papel do banco. Recarregar a página volta ao mesmo pedido, e um pedido novo substitui o pendente.
+- **Regras de cobrança:**
+  - Trocar de plano ou de ciclo começa um período novo hoje, descontando o que sobrou do período pago (crédito proporcional).
+  - Pagar o mesmo plano e ciclo é renovação: o período novo emenda no atual.
+  - Vagas extras compradas no meio do período custam o proporcional aos dias que faltam e entram na renovação.
+  - Uma academia que assina o Rede vira rede na aprovação, e o administrador vira o dono. Fora do teste, *Transformar em rede* leva a esse checkout.
+- **Limites:**
+  - Com a assinatura ativa, valem os do plano. O 151º aluno ativo no Essencial é recusado, assim como reativar um aluno com o limite cheio. O mesmo vale para o 3º usuário no Essencial e para a unidade além das vagas.
+  - Com o teste ou o período pago **vencido**, novos alunos, usuários e unidades ficam bloqueados (com a mensagem de como resolver). O resto do sistema continua funcionando.
+  - Para descer de plano, o uso precisa caber no plano menor.
+- **Quem paga:** o administrador da academia avulsa ou o dono da rede. O administrador de uma unidade vê a situação da rede, mas não paga, e funcionários não acessam (403).
+- **Onde está no código:**
+  - Servidor:
+    - `model/PlanoSistema.java`: preços e limites.
+    - `model/Assinatura.java` e `model/Pagamento.java`.
+    - `service/AssinaturaService.java`: regras, crédito, limites e aprovação.
+    - `service/GatewayDemonstracao.java`: troque por um gateway real (Mercado Pago, Stripe…) para cobrar de verdade.
+    - `controller/AssinaturaController.java`.
+  - Telas: `static/js/assinatura.js`.
+  - Comparador da apresentação: `static/js/apresentacao.js`.
+- **Exclusões:** excluir a conta (academia ou rede) também apaga a assinatura e o histórico de pagamentos.
+
 > Console do banco: http://localhost:8080/h2-console — JDBC URL `jdbc:h2:file:./data/academia`, usuário `sa`, sem senha.
 
 > Se você editar arquivos do front-end com o servidor rodando, use *Build → Rebuild Project* (ou reinicie) e recarregue a página com **Ctrl+F5**.
@@ -155,6 +199,25 @@ No primeiro acesso de cada usuário, um tour guiado passa pelas telas reais do s
   - **Ligar ou desligar:** no sistema, pela opção **Sons dos cliques** do menu da conta. Na apresentação, pelo botão de alto-falante no topo. A escolha vale para as duas páginas, no mesmo navegador.
   - **Botão de excluir a conta:** enquanto o botão é segurado, um zumbido grave sobe de tom e treme mais rápido conforme o preenchimento enche. Se a pessoa soltar antes, o som "murcha" junto com o botão. Quando enche, toca uma trava curta. Depois vem um impacto grave se a exclusão deu certo, ou dois toques secos se a senha ou o código estavam errados. Outros botões de segurar podem usar o mesmo som com a opção `som: true` do `HoldButton.montar`.
   - **Arquivo:** `static/js/sons.js`. Para deixar um elemento sem som, use `data-sem-som`. Para forçar um tipo, use `data-som="primario|perigo|alternar|clique"`.
+- **Notificações** (sino no topo, para todos os perfis): o contador mostra quantas não foram lidas. Clicar num aviso marca como lido e abre a tela certa (ex.: mensalidades já filtradas nas atrasadas). Há também "Marcar todas como lidas".
+
+  | Tipo | Quando aparece | Som |
+  |---|---|---|
+  | Financeiro | Mensalidades atrasadas (com o total) e mensalidades que vencem hoje | "plim" de moeda |
+  | Alunos | Aniversariantes do dia | arpejo alegre |
+  | Assinatura (administradores) | Pagamento aprovado, teste nos 3 últimos dias, assinatura vencendo em até 7 dias ou vencida (urgente), Pix ou boleto aguardando, perto do limite de alunos do plano | sino suave |
+  | Rede (dono) | Unidade sem administrador ativo, todas as vagas de unidade em uso | marimba |
+  | Segurança (cada pessoa) | Senha alterada (por você ou por um administrador), duas etapas ativadas, desligadas ou redefinidas, outras sessões encerradas, e o lembrete para ativar as duas etapas | dois bipes |
+
+  - **Quando toca:** quando chega uma notificação nova, uma vez por aviso neste navegador. Se chegarem várias juntas, toca só o som da mais importante (urgente primeiro), e o sino balança.
+  - **Atualização:** ao entrar, a cada 45 segundos, ao trocar de tela, depois de cada gravação e quando a aba volta a ficar visível. Antes do primeiro clique na página, o navegador não deixa tocar som; o aviso toca na próxima atualização.
+  - **Controle do som:** o botão de alto-falante do painel mostra os 5 tipos, com ▶ para ouvir cada som e uma chave para silenciar o tipo (a escolha fica no navegador). "Sons dos cliques", no menu da conta, desliga todos os sons.
+  - **No servidor:**
+    - `service/NotificacaoService.java`: monta a lista com os avisos calculados na hora e os eventos gravados.
+    - `service/Notificador.java`: grava os eventos.
+    - Tabelas `notificacoes` e `notificacoes_lidas`: os avisos calculados têm uma chave com a data, para voltarem no dia seguinte se o problema continuar.
+    - Excluir uma pessoa apaga as notificações dela.
+  - **No navegador:** `static/js/notificacoes.js`.
 - **Desempenho**: compressão gzip (o JavaScript cai de 82 KB para 23 KB), cache com validação (HTTP 304) e cache de dados no navegador, que é limpo a cada gravação.
 
 ## API REST (resumo)
@@ -173,7 +236,9 @@ No primeiro acesso de cada usuário, um tour guiado passa pelas telas reais do s
 | Duas etapas | `POST /api/auth/login/2fa` (público: desafio + código), `GET /api/auth/2fa`, `POST /api/auth/2fa/iniciar`, `POST /api/auth/2fa/ativar`, `POST /api/auth/2fa/desativar`, `DELETE /api/auth/2fa/dispositivos/{id}` e `DELETE /api/auth/2fa/dispositivos` (esquecer dispositivos lembrados), `POST /api/usuarios/{id}/2fa/redefinir` (admin) |
 | Usuários (só admin) | `GET/POST /api/usuarios`, `PUT/DELETE /api/usuarios/{id}` |
 | Rede (só dono) | `GET /api/rede` (painel), `POST /api/rede/unidades` (unidade + administrador), `PUT /api/rede/unidades/{id}`, `POST /api/rede/unidades/{id}/admins`, `POST /api/rede/unidades/{id}/abrir`, `GET /api/rede/unidades/{id}/exclusao` (o que a exclusão apaga), `POST /api/rede/unidades/{id}/excluir` |
-| Rede (admin de academia avulsa) | `POST /api/rede/converter` (transforma a academia em rede e vira o dono) |
+| Rede (admin de academia avulsa) | `POST /api/rede/converter` (transforma a academia em rede e vira o dono; fora do teste grátis, pelo checkout do plano Rede) |
+| Assinatura (só admin) | `GET /api/assinatura` (situação, uso, limites, catálogo e histórico), `GET /api/assinatura/orcamento?plano=&ciclo=&extras=`, `GET /api/assinatura/orcamento-unidades?quantidade=`, `POST /api/assinatura/checkout`, `POST /api/assinatura/unidades`, `GET /api/assinatura/pagamentos/{id}`, `POST /api/assinatura/pagamentos/{id}/simular` (demonstração: confirma Pix/boleto), `POST /api/assinatura/pagamentos/{id}/cancelar` |
+| Notificações (todos) | `GET /api/notificacoes` (lista e não lidas), `POST /api/notificacoes/lidas` (`{ "chave": "..." }`), `POST /api/notificacoes/lidas/todas` |
 
 Fora o login e o cadastro, toda chamada precisa do cabeçalho `Authorization: Bearer <token>`, com o token devolvido pelo login. Sem ele, a API responde 401; sem permissão para a ação, responde 403.
 

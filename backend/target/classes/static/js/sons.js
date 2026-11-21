@@ -115,6 +115,40 @@
       tom(t, { freq: 1100, ate: 220, dur: 0.16, forma: 'triangle', vol: 0.1 });
       tom(t + 0.05, { freq: 260, ate: 90, dur: 0.3, forma: 'triangle', vol: 0.12 });
     },
+    /* ---- Notificações (js/notificacoes.js): um som para cada tipo ---- */
+    // Financeiro: "plim" de moeda, dois toques agudos e brilhantes
+    'notif-financeiro'(t) {
+      estalo(t, { freq: 7000, dur: 0.03, vol: 0.18 });
+      tom(t, { freq: 1976, dur: 0.09, forma: 'triangle', vol: 0.16 });
+      tom(t + 0.08, { freq: 2637, dur: 0.32, vol: 0.14 });
+      tom(t + 0.08, { freq: 5274, dur: 0.18, vol: 0.03 });
+    },
+    // Alunos: arpejo alegre (dó–mi–sol), bom para aniversários
+    'notif-alunos'(t) {
+      [1047, 1319, 1568].forEach((f, i) => tom(t + i * 0.09, { freq: f, dur: 0.22, forma: 'triangle', vol: 0.13 }));
+      tom(t + 0.27, { freq: 2093, dur: 0.3, vol: 0.06 });
+    },
+    // Assinatura: sino suave, duas notas longas
+    'notif-assinatura'(t) {
+      tom(t, { freq: 880, dur: 0.7, vol: 0.16 });
+      tom(t, { freq: 1760, dur: 0.35, vol: 0.04 });
+      tom(t + 0.2, { freq: 1319, dur: 0.85, vol: 0.13 });
+      tom(t + 0.2, { freq: 2637, dur: 0.4, vol: 0.03 });
+    },
+    // Rede: marimba, duas notas de madeira
+    'notif-rede'(t) {
+      tom(t, { freq: 523, dur: 0.2, forma: 'triangle', vol: 0.22 });
+      tom(t, { freq: 2092, dur: 0.05, vol: 0.05 });
+      tom(t + 0.13, { freq: 784, dur: 0.28, forma: 'triangle', vol: 0.2 });
+      tom(t + 0.13, { freq: 3136, dur: 0.05, vol: 0.04 });
+    },
+    // Segurança: dois bipes firmes, mais graves
+    'notif-seguranca'(t) {
+      [0, 0.16].forEach((d) => {
+        tom(t + d, { freq: 620, dur: 0.1, forma: 'square', vol: 0.05 });
+        tom(t + d, { freq: 310, dur: 0.12, vol: 0.18 });
+      });
+    },
     // Algo deu errado (senha ou código incorretos): dois toques secos descendo
     erro(t) {
       tom(t, { freq: 330, ate: 300, dur: 0.08, forma: 'square', vol: 0.07 });

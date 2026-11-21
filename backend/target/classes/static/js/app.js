@@ -68,6 +68,7 @@ async function api(caminho, { method = 'GET', body } = {}) {
   if (method !== 'GET') {
     const r = await requisitar(caminho, method, body);
     cacheGet.clear();
+    window.Notificacoes?.atualizar(); // uma gravação pode gerar ou resolver avisos
     return r;
   }
   const c = cacheGet.get(caminho);
@@ -608,6 +609,7 @@ const ORDEM_MODULOS = ['dashboard', 'alunos', 'planos', 'mensalidades', 'profess
 const ROTULOS = {
   dashboard: 'Painel de controle', alunos: 'Gestão de alunos', planos: 'Planos e preços', mensalidades: 'Financeiro',
   professores: 'Equipe', treinos: 'Treinos', avaliacoes: 'Acompanhamento', usuarios: 'Acesso ao sistema', rede: 'Rede de academias', perfil: 'Sua conta',
+  assinatura: 'Plano e cobrança', checkout: 'Pagamento',
 };
 
 /** Título em duas linhas: a primeira em vermelho, a segunda só com contorno. Ex.: 'Nossos|Alunos'. */
@@ -615,7 +617,7 @@ function cabecalho(titulo, subtitulo, acoes = '', rotulo = '') {
   const [l1, l2 = ''] = titulo.split('|');
   const { modulo } = rotaAtual();
   // A rede fica acima dos módulos: 00
-  const n = modulo === 'rede' ? '00' : modulo === 'perfil' ? '—' : String(Math.max(ORDEM_MODULOS.indexOf(modulo), 0) + 1).padStart(2, '0');
+  const n = modulo === 'rede' ? '00' : ['perfil', 'assinatura', 'checkout'].includes(modulo) ? '—' : String(Math.max(ORDEM_MODULOS.indexOf(modulo), 0) + 1).padStart(2, '0');
   $('#kicker').innerHTML = `<b>${n}</b> &nbsp;/&nbsp; ${esc(rotulo || ROTULOS[modulo] || l1)}`;
   $('#titulo .t1').textContent = l1;
   $('#titulo .t2').textContent = l2;
@@ -1598,7 +1600,7 @@ TELAS.rede = async () => {
   sessao.rede = rede;
   const cheia = unidades.length >= rede.limiteUnidades;
   cabecalho('Minha|Rede', `Todas as unidades da <b>${esc(rede.nome)}</b>, cada uma com os seus próprios dados e administradores. Só você vê todas.`,
-    cheia ? `<button class="primario" disabled title="O plano Rede permite até ${rede.limiteUnidades} unidades">Limite de ${rede.limiteUnidades} unidades</button>`
+    cheia ? `<a class="btn primario" href="#/checkout?tipo=unidades&quantidade=1" title="A rede usa as ${rede.limiteUnidades} vagas de unidade">Comprar vagas de unidade</a>`
           : '<button class="primario" data-acao="novaUnidade">+ Nova unidade</button>',
     'Rede de academias');
   const maiorReceita = Math.max(1, ...unidades.map((u) => Number(u.numeros.recebidoNoMes)));
@@ -1643,7 +1645,8 @@ TELAS.rede = async () => {
           ${u.sede ? '' : `<button class="pequeno perigo" data-acao="excluirUnidade" data-id="${u.id}">Excluir</button>`}
         </footer>
       </article>`).join('')}
-      ${cheia ? '' : `<button type="button" class="unidade-nova" data-acao="novaUnidade"><span>+</span>Nova unidade<small>${unidades.length} de ${rede.limiteUnidades} usadas</small></button>`}
+      ${cheia ? `<a class="unidade-nova" href="#/checkout?tipo=unidades&quantidade=1"><span>+</span>Comprar mais vagas<small>${unidades.length} de ${rede.limiteUnidades} usadas · R$ 59/mês cada</small></a>`
+             : `<button type="button" class="unidade-nova" data-acao="novaUnidade"><span>+</span>Nova unidade<small>${unidades.length} de ${rede.limiteUnidades} usadas</small></button>`}
     </div>
     <p class="dica rede-dica">Abrir uma unidade troca o sistema inteiro para ela: alunos, planos, mensalidades e usuários passam a ser dessa unidade, com poderes de administrador. Os administradores de cada unidade continuam vendo só a própria. Excluir uma unidade apaga tudo o que há nela (a sua unidade principal não pode ser excluída).</p>`;
 };
@@ -1721,8 +1724,16 @@ ACOES.abrirUnidade = async (id) => {
 };
 
 /** Upgrade: a academia avulsa vira a primeira unidade de uma rede, e o administrador vira o dono. */
-ACOES.converterRede = () => {
+ACOES.converterRede = async () => {
   fecharMenuUsuario();
+  // Fora do teste grátis, virar rede é assinar o plano Rede (checkout)
+  try {
+    const st = await requisitar('/assinatura', 'GET');
+    if (st.situacao !== 'TESTE') {
+      aviso('Para transformar a academia em rede, assine o plano Rede.');
+      return irPara('checkout', { plano: 'REDE', ciclo: st.ciclo || 'MENSAL' });
+    }
+  } catch { /* servidor sem assinatura: segue o fluxo antigo */ }
   abrirFormulario({
     titulo: 'Transformar em rede',
     textoBotao: 'Criar rede',
@@ -1875,9 +1886,16 @@ function entrarNoApp(dados) {
   document.body.classList.remove('nao-logado', 'verificando');
   if (!ehAdmin() && rotaAtual().modulo === 'usuarios') location.hash = '#/dashboard';
   if (!ehDono() && rotaAtual().modulo === 'rede') location.hash = '#/dashboard';
-  renderizar();
-  // Primeiro acesso deste usuário neste navegador: abre o tutorial guiado (js/tutorial.js)
-  contextoTutorial().then((ctx) => { if (ctx) window.Tutorial?.aoEntrar(ctx); });
+  if (!ehAdmin() && ['assinatura', 'checkout'].includes(rotaAtual().modulo)) location.hash = '#/dashboard';
+  // Plano escolhido na apresentação: vai direto ao checkout (desenhar o Início antes deixaria as duas telas
+  // disputando o conteúdo, e a que terminasse por último venceria)
+  if (!(typeof irParaPlanoEscolhido === 'function' && irParaPlanoEscolhido())) renderizar();
+  window.Notificacoes?.iniciar(); // sino do topo (js/notificacoes.js)
+  // Primeiro acesso deste usuário neste navegador: abre o tutorial guiado (js/tutorial.js).
+  // Indo pagar um plano (escolhido na apresentação ou no checkout), o tour fica para a próxima entrada.
+  let vaiPagar = rotaAtual().modulo === 'checkout';
+  try { vaiPagar = vaiPagar || !!sessionStorage.getItem('forcatotal.planoEscolhido'); } catch { /* sem armazenamento */ }
+  if (!vaiPagar) contextoTutorial().then((ctx) => { if (ctx) window.Tutorial?.aoEntrar(ctx); });
 }
 
 /** Dados que o tutorial usa para adaptar os passos (perfil, academia nova ou não). */
@@ -1897,6 +1915,7 @@ ACOES.tutorial = async () => {
 
 function encerrarSessao(mensagem) {
   window.Tutorial?.encerrar();
+  window.Notificacoes?.parar();
   apagarToken();
   sessao = null;
   cacheGet.clear();
@@ -2046,7 +2065,8 @@ $('#formCadastro').addEventListener('submit', async (e) => {
     nomeAcademia: v.nomeAcademia, cidade: v.cidade || null, nome: v.nome, email: v.email, senha: $('#cadSenha').value,
     tipo: rede ? 'REDE' : 'ACADEMIA', nomeRede: rede ? v.nomeRede : null,
   });
-  if (r && rede) { location.hash = '#/rede'; aviso(`Rede “${r.rede.nome}” criada. Cadastre as outras unidades e os administradores delas.`); }
+  if (r && rotaAtual().modulo === 'checkout') aviso('Conta criada. Agora escolha a forma de pagamento.'); // o entrarNoApp já foi ao checkout
+  else if (r && rede) { location.hash = '#/rede'; aviso(`Rede “${r.rede.nome}” criada. Cadastre as outras unidades e os administradores delas.`); }
   else if (r) { location.hash = '#/dashboard'; aviso(`Cadastro concluído: “${r.academia.nome}” já está pronta para uso.`); }
 });
 
@@ -2608,6 +2628,18 @@ ACOES.redefinirDoisFatores = async (id) => {
   renderizar();
 };
 
+/** Plano escolhido na apresentação: aparece no cadastro, e o Rede já marca "Rede de academias". */
+function mostrarPlanoEscolhidoNoCadastro() {
+  let e = null;
+  try { e = JSON.parse(sessionStorage.getItem('forcatotal.planoEscolhido') || 'null'); } catch { /* sem armazenamento */ }
+  const nomes = { ESSENCIAL: 'Essencial', PROFISSIONAL: 'Profissional', REDE: 'Rede' };
+  if (!e || !nomes[e.plano]) return;
+  const unidades = e.plano === 'REDE' && e.extras ? ` com ${5 + Number(e.extras)} unidades` : '';
+  $('#cadPlanoEscolhido').innerHTML = `Plano escolhido: <b>${nomes[e.plano]} ${e.ciclo === 'ANUAL' ? 'anual' : 'mensal'}${unidades}</b>. Depois do cadastro, você escolhe a forma de pagamento.`;
+  $('#cadPlanoEscolhido').hidden = false;
+  if (e.plano === 'REDE') { $('#formCadastro input[name=tipo][value=REDE]').checked = true; ajustarTipoCadastro(); }
+}
+
 /* ---------------------------------------------------------------------
  * Início: com token salvo, confirma a sessão; senão, mostra o login
  * ------------------------------------------------------------------- */
@@ -2615,7 +2647,7 @@ async function iniciar() {
   // Vindo da página de apresentação: "/#cadastro" abre direto a aba de cadastro de academia
   if (location.hash === '#cadastro') {
     history.replaceState(null, '', location.pathname);
-    if (!lerToken()) { encerrarSessao(); trocarAba('cadastro'); setTimeout(() => $('#cadAcademia').focus(), 80); return; }
+    if (!lerToken()) { encerrarSessao(); trocarAba('cadastro'); mostrarPlanoEscolhidoNoCadastro(); setTimeout(() => $('#cadAcademia').focus(), 80); return; }
   }
   if (!lerToken()) return encerrarSessao();
   try {

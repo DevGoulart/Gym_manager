@@ -26,11 +26,18 @@ public class RemocaoDeAcademias {
     private final ProfessorRepository professores;
     private final PlanoRepository planos;
     private final DispositivosConfiaveis dispositivos;
+    private final AssinaturaRepository assinaturas;
+    private final PagamentoRepository pagamentos;
+    private final Notificador notificador;
 
     public RemocaoDeAcademias(UsuarioRepository usuarios, AcademiaRepository academias, SessaoRepository sessoes,
                               AlunoRepository alunos, MensalidadeRepository mensalidades, FichaTreinoRepository fichas,
                               AvaliacaoFisicaRepository avaliacoes, ProfessorRepository professores, PlanoRepository planos,
-                              DispositivosConfiaveis dispositivos) {
+                              DispositivosConfiaveis dispositivos, AssinaturaRepository assinaturas, PagamentoRepository pagamentos,
+                              Notificador notificador) {
+        this.notificador = notificador;
+        this.assinaturas = assinaturas;
+        this.pagamentos = pagamentos;
         this.usuarios = usuarios;
         this.academias = academias;
         this.sessoes = sessoes;
@@ -47,6 +54,7 @@ public class RemocaoDeAcademias {
     public void apagarAcessos(Usuario u) {
         sessoes.apagarDoUsuario(u.getId());
         dispositivos.esquecerTodos(u.getId());
+        notificador.apagarDoUsuario(u.getId());
     }
 
     /**
@@ -72,6 +80,17 @@ public class RemocaoDeAcademias {
         professores.deleteAll(professores.findByAcademiaIdOrderByNomeAsc(id));
         planos.deleteAll(planos.findByAcademiaIdOrderByValorMensalAsc(id));
         usuarios.deleteAll(usuarios.findByAcademiaIdOrderByNomeAsc(id));
+        assinaturas.findByAcademiaId(id).ifPresent(this::apagarAssinatura); // academia avulsa
         academias.delete(ac);
+    }
+
+    /** Assinatura da rede e o histórico de pagamentos (antes de apagar a rede). */
+    public void apagarAssinaturaDaRede(Long redeId) {
+        assinaturas.findByRedeId(redeId).ifPresent(this::apagarAssinatura);
+    }
+
+    private void apagarAssinatura(com.academia.model.Assinatura s) {
+        pagamentos.apagarDaAssinatura(s.getId());
+        assinaturas.delete(s);
     }
 }

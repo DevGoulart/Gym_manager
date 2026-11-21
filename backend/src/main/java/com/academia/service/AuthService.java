@@ -42,6 +42,7 @@ public class AuthService {
     private final DesafiosDoisFatores desafios;
     private final RedeRepository redeRepository;
     private final DispositivosConfiaveis dispositivos;
+    private final Notificador notificador;
     /** Hash usado quando o e-mail não existe, para o tempo de resposta não revelar quais e-mails têm conta. */
     private final String hashFalso;
 
@@ -49,7 +50,8 @@ public class AuthService {
                        SessaoRepository sessaoRepository, PasswordEncoder passwordEncoder,
                        LimiteTentativas limiteTentativas, AcademiaAtual academiaAtual,
                        DoisFatoresService doisFatoresService, DesafiosDoisFatores desafios,
-                       RedeRepository redeRepository, DispositivosConfiaveis dispositivos) {
+                       RedeRepository redeRepository, DispositivosConfiaveis dispositivos, Notificador notificador) {
+        this.notificador = notificador;
         this.usuarioRepository = usuarioRepository;
         this.academiaRepository = academiaRepository;
         this.sessaoRepository = sessaoRepository;
@@ -193,7 +195,7 @@ public class AuthService {
     @Transactional
     public SessoesResponse encerrarOutrasSessoes() {
         var logado = academiaAtual.usuario();
-        sessaoRepository.apagarOutrasDoUsuario(logado.id(), logado.sessaoId());
+        if (sessaoRepository.apagarOutrasDoUsuario(logado.id(), logado.sessaoId()) > 0) notificador.sessoesEncerradas(logado.id());
         return sessoes();
     }
 
@@ -208,6 +210,7 @@ public class AuthService {
         usuarioRepository.save(u);
         // Senha nova: os navegadores lembrados voltam a pedir o código das duas etapas
         dispositivos.esquecerTodos(u.getId());
+        notificador.senhaAlterada(u.getId(), null);
     }
 
     private SessaoResponse abrirSessao(Usuario u) {

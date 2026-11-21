@@ -50,6 +50,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/rede/converter").hasRole("ADMIN")
                         .requestMatchers("/api/rede/**", "/api/rede").hasRole("DONO")
                         .requestMatchers("/api/usuarios/**").hasRole("ADMIN")
+                        .requestMatchers("/api/assinatura/**", "/api/assinatura").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/planos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/planos/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/planos/**").hasRole("ADMIN")

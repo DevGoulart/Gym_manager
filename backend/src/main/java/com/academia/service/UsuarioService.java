@@ -27,9 +27,14 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final AcademiaAtual academiaAtual;
     private final DispositivosConfiaveis dispositivos;
+    private final AssinaturaService assinaturas;
+    private final Notificador notificador;
 
     public UsuarioService(UsuarioRepository usuarioRepository, SessaoRepository sessaoRepository,
-                          PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual, DispositivosConfiaveis dispositivos) {
+                          PasswordEncoder passwordEncoder, AcademiaAtual academiaAtual, DispositivosConfiaveis dispositivos, AssinaturaService assinaturas,
+                          Notificador notificador) {
+        this.notificador = notificador;
+        this.assinaturas = assinaturas;
         this.usuarioRepository = usuarioRepository;
         this.sessaoRepository = sessaoRepository;
         this.passwordEncoder = passwordEncoder;
@@ -64,6 +69,7 @@ public class UsuarioService {
         if (usuarioRepository.existsByEmailIgnoreCase(email)) {
             throw new RegraNegocioException("Já existe uma conta com o e-mail " + email);
         }
+        assinaturas.exigirVagaUsuario(academiaAtual.id()); // limite de usuários do plano
         Usuario u = new Usuario();
         u.setAcademia(academiaAtual.referencia());
         u.setNome(req.nome().trim());
@@ -101,6 +107,7 @@ public class UsuarioService {
         if (!ehVoce && (trocouSenha || !ativo)) sessaoRepository.apagarDoUsuario(u.getId());
         // Senha trocada: os navegadores lembrados dele voltam a pedir o código das duas etapas
         if (trocouSenha) dispositivos.esquecerTodos(u.getId());
+        if (trocouSenha && !ehVoce) notificador.senhaAlterada(u.getId(), academiaAtual.usuario().nome());
         return UsuarioResponse.de(u);
     }
 
@@ -113,6 +120,7 @@ public class UsuarioService {
         if (u.getPerfil() == Perfil.ADMIN && u.isAtivo()) garantirOutroAdmin();
         sessaoRepository.apagarDoUsuario(u.getId());
         dispositivos.esquecerTodos(u.getId());
+        notificador.apagarDoUsuario(u.getId());
         usuarioRepository.delete(u);
     }
 
@@ -133,6 +141,7 @@ public class UsuarioService {
         usuarioRepository.save(u);
         sessaoRepository.apagarDoUsuario(u.getId());
         dispositivos.esquecerTodos(u.getId());
+        notificador.doisFatoresDesativada(u.getId(), academiaAtual.usuario().nome());
         return UsuarioResponse.de(u);
     }
 

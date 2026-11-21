@@ -117,7 +117,10 @@ public class ExclusaoContaService {
             return;
         }
         remocao.apagar(a.academias());
-        if (a.rede() != null) redes.delete(a.rede());
+        if (a.rede() != null) {
+            remocao.apagarAssinaturaDaRede(a.rede().getId());
+            redes.delete(a.rede());
+        }
     }
 
     /** O texto digitado confere com o esperado (sem diferença de maiúsculas, acentos e espaços repetidos)? */
