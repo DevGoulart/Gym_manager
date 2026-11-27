@@ -26,6 +26,15 @@ GymApp/
 
 ## Como executar
 
+**Jeito rápido (Windows):** dê dois cliques em **`iniciar-site.bat`**, na pasta principal do projeto.
+- Ele acha sozinho o Java 21 (JAVA_HOME, pastas comuns ou os JDKs do IntelliJ) e o Maven (PATH ou o Maven que o IntelliJ baixa em `.m2`).
+- Abre o servidor numa janela **"Força Total - servidor"** (feche essa janela para parar o site), espera o site responder e abre o navegador em http://localhost:8080.
+- Se o site já estiver no ar, só abre o navegador.
+- Outra porta: `iniciar-site.bat 9090`.
+- A primeira vez pode levar alguns minutos (o Maven compila o projeto).
+
+**Pelo IntelliJ:**
+
 1. Abra a pasta **`backend`** no **IntelliJ IDEA** (*File → Open*, selecione a pasta; ele reconhece o `pom.xml`).
 2. Use o **JDK 21** (*File → Project Structure → SDK*).
 3. Execute a classe **`AcademiaApplication`** (botão ▶ verde).
